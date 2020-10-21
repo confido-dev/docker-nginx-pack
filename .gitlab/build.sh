@@ -2,7 +2,7 @@ for ver in $DOCKER_ARGS; do
 
   DOCKER_VERS="${ver}"
 
-  echo "Bulding ${DOCKER_VERS} from "${CI_COMMIT_BRANCH}""
+  echo "Building ${DOCKER_VERS} from "${CI_COMMIT_BRANCH}""
 
   if [ "${DOCKER_VERS}" = "core" ]; then
     docker build --no-cache -t $DOCKER_TEMP:$DOCKER_VERS .
