@@ -15,8 +15,7 @@
 #########################
 FROM ubuntu:focal as base
 
-ENV BUILD_BRANCH=false \
-    DEBIAN_FRONTEND=noninteractive \
+ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
     AMPLIFY_TAG="default" \
     AMPLIFY_HOST="" \
@@ -59,6 +58,8 @@ RUN apt-get update && \
 #########################
 FROM base as builder
 
+ARG BUILD_BRANCH
+
 WORKDIR /tmp
 
 RUN apt-get update && \
@@ -76,7 +77,7 @@ RUN echo './configure' > /tmp/nginx.sh && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
 
-RUN if [ "${BUILD_BRANCH}" == "master" ]; then \
+RUN if [ "${BUILD_BRANCH}" = "master" ]; then \
         rm /tmp/ssl/* && \
         openssl dhparam -out /tmp/ssl/dhparam.pem 4096 && \
         openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
