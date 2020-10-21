@@ -1,7 +1,7 @@
 for ver in $DOCKER_ARGS; do
 
   DOCKER_VERS="${ver}"
-  SSL_RENEW=$(( "${CI_COMMIT_BRANCH}" == "master"  ? 1 : 0 ))
+  SSL_RENEW=$(( "${CI_COMMIT_BRANCH}" == "master" ? true : false ))
 
   echo "Bulding ${DOCKER_VERS} from "${CI_COMMIT_BRANCH}""
 
