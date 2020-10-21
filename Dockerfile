@@ -15,7 +15,8 @@
 #########################
 FROM ubuntu:focal as base
 
-ENV DEBIAN_FRONTEND=noninteractive \
+ENV BUILD_BRANCH=false \
+    DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
     AMPLIFY_TAG="default" \
     AMPLIFY_HOST="" \
@@ -23,7 +24,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     AMPLIFY_NAME="" \
     AMPLIFY_KEY="" \
     NGINX_GEOIP=false \
-    SSL_RENEW=false \
     WWW_HOME="/www" \
     GID=0 \
     UID=0 \
@@ -76,7 +76,7 @@ RUN echo './configure' > /tmp/nginx.sh && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
 
-RUN if [ "${SSL_RENEW}" = true ]; then \
+RUN if [ "${BUILD_BRANCH}" == "master" ]; then \
         rm /tmp/ssl/* && \
         openssl dhparam -out /tmp/ssl/dhparam.pem 4096 && \
         openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
