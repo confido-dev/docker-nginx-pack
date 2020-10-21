@@ -23,6 +23,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     AMPLIFY_NAME="" \
     AMPLIFY_KEY="" \
     NGINX_GEOIP=false \
+    SSL_RENEW=false \
     WWW_HOME="/www" \
     GID=0 \
     UID=0 \
@@ -61,7 +62,7 @@ FROM base as builder
 WORKDIR /tmp
 
 RUN apt-get update && \
-    apt-get install git dpkg-dev -y && \
+    apt-get install git dpkg-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
     if [ ! -d "ngx_http_geoip2_module" ]; then git clone https://github.com/leev/ngx_http_geoip2_module.git; fi
@@ -74,12 +75,15 @@ RUN echo './configure' > /tmp/nginx.sh && \
     cd nginx-* && /tmp/nginx.sh && make modules && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
+COPY ./ssl /tmp/ssl
+
 
 #########################
 ###     COMPOSING     ###
 #########################
 FROM base as core
 
+COPY --from=builder /tmp/ssl /etc/nginx/ssl
 COPY --from=builder /tmp/ngx_http_geoip2_module.so /usr/lib/nginx/modules/
 
 RUN rm -rf /etc/nginx/modules-enabled/* && \
@@ -92,7 +96,6 @@ RUN rm -rf /etc/nginx/modules-enabled/* && \
 
 COPY ./nginx /etc/nginx
 COPY ./amplify /etc/amplify-agent
-COPY ./ssl /etc/nginx/ssl
 
 RUN unlink /var/log/nginx/error.log && \
     unlink /var/log/nginx/access.log && \
