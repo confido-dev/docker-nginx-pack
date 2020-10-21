@@ -58,10 +58,12 @@ RUN apt-get update && \
 #########################
 FROM base as builder
 
+ARG BUILD_BRANCH
+
 WORKDIR /tmp
 
 RUN apt-get update && \
-    apt-get install git dpkg-dev -y && \
+    apt-get install git dpkg-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
     if [ ! -d "ngx_http_geoip2_module" ]; then git clone https://github.com/leev/ngx_http_geoip2_module.git; fi
@@ -74,12 +76,23 @@ RUN echo './configure' > /tmp/nginx.sh && \
     cd nginx-* && /tmp/nginx.sh && make modules && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
+RUN if [ "${BUILD_BRANCH}" = "master" ]; then \
+        rm /tmp/ssl/* && \
+        openssl dhparam -out /tmp/ssl/dhparam.pem 4096 && \
+        openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+                    -keyout /tmp/ssl/default.key -out /tmp/ssl/default.crt \
+                    -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null' \
+    ; fi
+
+COPY ./ssl /tmp/ssl
+
 
 #########################
 ###     COMPOSING     ###
 #########################
 FROM base as core
 
+COPY --from=builder /tmp/ssl /etc/nginx/ssl
 COPY --from=builder /tmp/ngx_http_geoip2_module.so /usr/lib/nginx/modules/
 
 RUN rm -rf /etc/nginx/modules-enabled/* && \
@@ -92,7 +105,6 @@ RUN rm -rf /etc/nginx/modules-enabled/* && \
 
 COPY ./nginx /etc/nginx
 COPY ./amplify /etc/amplify-agent
-COPY ./ssl /etc/nginx/ssl
 
 RUN unlink /var/log/nginx/error.log && \
     unlink /var/log/nginx/access.log && \
