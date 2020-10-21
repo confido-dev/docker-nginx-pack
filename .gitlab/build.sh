@@ -2,13 +2,13 @@ for ver in $DOCKER_ARGS; do
 
   DOCKER_VERS="${ver}"
 
-  NOT_DUMMY_SSL=false
+  NOT_DUMMY_SSL="false"
 
   echo "Building ${DOCKER_VERS} from "${CI_COMMIT_BRANCH}""
 
-  if [ "${CI_COMMIT_BRANCH}" = "develop" ]; then
-      NOT_DUMMY_SSL=true
-  fi
+  [[ "${CI_COMMIT_BRANCH}" = "develop" ]] && NOT_DUMMY_SSL="true" || NOT_DUMMY_SSL="false"
+
+  echo "NOT DUMMY - ${NOT_DUMMY_SSL}"
 
   if [ "${DOCKER_VERS}" = "core" ]; then
     docker build --no-cache -t $DOCKER_TEMP:$DOCKER_VERS .
