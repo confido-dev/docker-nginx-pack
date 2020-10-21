@@ -6,7 +6,7 @@ for ver in $DOCKER_ARGS; do
 
   echo "Building ${DOCKER_VERS} from "${CI_COMMIT_BRANCH}""
 
-  if [ "${CI_COMMIT_BRANCH}" = "master" ]; then
+  if [ "${CI_COMMIT_BRANCH}" = "develop" ]; then
       NOT_DUMMY_SSL=true
   fi
 
