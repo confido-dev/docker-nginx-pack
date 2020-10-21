@@ -8,8 +8,6 @@ for ver in $DOCKER_ARGS; do
 
   [[ "${CI_COMMIT_BRANCH}" = "develop" ]] && NOT_DUMMY_SSL="true" || NOT_DUMMY_SSL="false"
 
-  echo "NOT DUMMY - ${NOT_DUMMY_SSL}"
-
   if [ "${DOCKER_VERS}" = "core" ]; then
     docker build --no-cache -t $DOCKER_TEMP:$DOCKER_VERS .
   else

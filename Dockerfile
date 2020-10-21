@@ -79,6 +79,8 @@ RUN echo './configure' > /tmp/nginx.sh && \
 
 COPY ./ssl /tmp/ssl
 
+RUN echo "${NOT_DUMMY_SSL}"
+
 RUN if [ "${NOT_DUMMY_SSL}" = "true" ]; then \
         rm /tmp/ssl/* && \
         openssl dhparam -out /tmp/ssl/dhparam.pem 4096 && \
