@@ -79,7 +79,7 @@ RUN echo './configure' > /tmp/nginx.sh && \
 
 COPY ./ssl /tmp/ssl
 
-RUN if [ "${NOT_DUMMY_SSL}" = true ]; then \
+RUN if [ "${NOT_DUMMY_SSL}" = "true" ]; then \
         rm /tmp/ssl/* && \
         openssl dhparam -out /tmp/ssl/dhparam.pem 4096 && \
         openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
