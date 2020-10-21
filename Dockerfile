@@ -58,8 +58,8 @@ RUN apt-get update && \
 #########################
 FROM base as builder
 
-ARG BUILD_BRANCH
-ENV BUILD_BRANCH ${BUILD_BRANCH}
+ARG NOT_DUMMY_SSL
+ENV NOT_DUMMY_SSL ${NOT_DUMMY_SSL}
 
 WORKDIR /tmp
 
@@ -79,7 +79,7 @@ RUN echo './configure' > /tmp/nginx.sh && \
 
 COPY ./ssl /tmp/ssl
 
-RUN if [ "${BUILD_BRANCH}" = "develop" ]; then \
+RUN if [ "${NOT_DUMMY_SSL}" = true ]; then \
         rm /tmp/ssl/* && \
         openssl dhparam -out /tmp/ssl/dhparam.pem 4096 && \
         openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
