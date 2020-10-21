@@ -76,7 +76,6 @@ RUN echo './configure' > /tmp/nginx.sh && \
     cd nginx-* && /tmp/nginx.sh && make modules && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
-
 RUN if [ "${BUILD_BRANCH}" = "master" ]; then \
         rm /tmp/ssl/* && \
         openssl dhparam -out /tmp/ssl/dhparam.pem 4096 && \
