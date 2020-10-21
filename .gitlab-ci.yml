@@ -1,0 +1,36 @@
+image: docker:stable
+
+stages:
+  - build
+  - test
+  - push
+
+variables:
+  DOCKER_ARGS: "core 8.0 7.4 7.3 7.2 7.1 7.0 5.6"
+  DOCKER_TEMP: "${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-build"
+  DOCKER_BASE: "${DOCKER_ACC}/${DOCKER_PKG}"
+
+
+docker build:
+  stage: build
+  only:
+    - develop
+    - master
+  script:
+    - chmod +x ./.gitlab/build.sh && ./.gitlab/build.sh
+
+docker test:
+  stage: test
+  only:
+    - develop
+    - master
+  script:
+    - chmod +x ./.gitlab/test.sh && ./.gitlab/test.sh
+
+docker push:
+  stage: push
+  only:
+    - master
+  script:
+    - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
+    - chmod +x ./.gitlab/push.sh && ./.gitlab/push.sh

@@ -1,0 +1,32 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    root /www;
+    include conf.d/drop.conf;
+    index index.html index.php;
+    location / {
+        try_files $uri $uri/ =404;
+    }
+    location ~ \.php$ {
+        include fastcgi.conf;
+        fastcgi_pass 127.0.0.1:9000;
+    }
+}
+
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    server_name _;
+    root /www;
+    include conf.d/drop.conf;
+    include conf.d/ssl-dummy.conf;
+    index index.html index.php;
+    location / {
+        try_files $uri $uri/ =404;
+    }
+    location ~ \.php$ {
+        include fastcgi.conf;
+        fastcgi_pass 127.0.0.1:9000;
+    }
+}

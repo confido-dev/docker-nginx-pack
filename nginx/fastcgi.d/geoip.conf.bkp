@@ -1,0 +1,12 @@
+# MaxMind GeoIP Country
+fastcgi_param   HTTP_GEOIP_CONTINENT_CODE   $geoip2_data_continent_code;
+fastcgi_param   HTTP_GEOIP_CONTINENT_NAME   $geoip2_data_continent_name;
+fastcgi_param   HTTP_GEOIP_COUNTRY_CODE     $geoip2_data_country_code;
+fastcgi_param   HTTP_GEOIP_COUNTRY_NAME     $geoip2_data_country_name;
+fastcgi_param   HTTP_GEOIP_REGION_CODE      $geoip2_data_region_code;
+fastcgi_param   HTTP_GEOIP_REGION_NAME      $geoip2_data_region_name;
+fastcgi_param   HTTP_GEOIP_CITY_NAME        $geoip2_data_city_name;
+fastcgi_param   HTTP_GEOIP_TIMEZONE         $geoip2_data_time_zone;
+fastcgi_param   HTTP_GEOIP_RADIUS           $geoip2_data_radius;
+fastcgi_param   HTTP_GEOIP_LATITUDE         $geoip2_data_latitude;
+fastcgi_param   HTTP_GEOIP_LONGITUDE        $geoip2_data_longitude;

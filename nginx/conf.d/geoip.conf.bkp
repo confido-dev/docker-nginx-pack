@@ -1,0 +1,13 @@
+geoip2 /etc/nginx/data/geo2.mmdb {
+    $geoip2_data_continent_code default=NA source=$remote_addr continent code;
+    $geoip2_data_continent_name continent names ru;
+    $geoip2_data_country_code country iso_code;
+    $geoip2_data_country_name country names ru;
+    $geoip2_data_region_code subdivisions 0 iso_code;
+    $geoip2_data_region_name subdivisions 0 names ru;
+    $geoip2_data_city_name city names ru;
+    $geoip2_data_radius location accuracy_radius;
+    $geoip2_data_latitude location latitude;
+    $geoip2_data_longitude location longitude;
+    $geoip2_data_time_zone location time_zone;
+}
