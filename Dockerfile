@@ -76,6 +76,8 @@ RUN echo './configure' > /tmp/nginx.sh && \
     cd nginx-* && /tmp/nginx.sh && make modules && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
+COPY ./ssl /tmp/ssl
+
 RUN if [ "${BUILD_BRANCH}" = "master" ]; then \
         rm /tmp/ssl/* && \
         openssl dhparam -out /tmp/ssl/dhparam.pem 4096 && \
@@ -83,8 +85,6 @@ RUN if [ "${BUILD_BRANCH}" = "master" ]; then \
                     -keyout /tmp/ssl/default.key -out /tmp/ssl/default.crt \
                     -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null' \
     ; fi
-
-COPY ./ssl /tmp/ssl
 
 
 #########################
