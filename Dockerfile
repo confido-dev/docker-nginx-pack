@@ -59,6 +59,7 @@ RUN apt-get update && \
 FROM base as builder
 
 ARG BUILD_BRANCH
+ENV BUILD_BRANCH ${BUILD_BRANCH}
 
 WORKDIR /tmp
 
