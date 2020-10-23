@@ -133,7 +133,10 @@ RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" != "8.0" ]; then \
                            php${PHP_VERSION}-mbstring \
                            php${PHP_VERSION}-bcmath \
                            php${PHP_VERSION}-opcache \
+                           php${PHP_VERSION}-zip \
                            php-xdebug \
+                           unzip \
+
         && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* \
@@ -151,7 +154,9 @@ RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" = "8.0" ]; then \
                            php${PHP_VERSION}-mbstring \
                            php${PHP_VERSION}-bcmath \
                            php${PHP_VERSION}-opcache \
+                           php${PHP_VERSION}-zip \
                            php-xdebug \
+                           unzip \
         && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* \
