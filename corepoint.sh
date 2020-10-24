@@ -124,7 +124,7 @@ fi
 
 
 #########################
-###     APP INITING   ###
+###    APP INITING    ###
 #########################
 if [ -f "/entrypoint.sh" ]; then
     echo " :: RUNNING APP ENTRYPOINT"
