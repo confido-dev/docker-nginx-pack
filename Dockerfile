@@ -205,6 +205,6 @@ RUN mkfifo --mode 0666 /tmp/docker.log
 EXPOSE 80
 EXPOSE 443
 
-ENTRYPOINT ["/bin/bash", "corepoint.sh"]
+ENTRYPOINT ["/bin/bash", "/corepoint.sh"]
 
 HEALTHCHECK --timeout=10s CMD /bin/bash /health.sh
