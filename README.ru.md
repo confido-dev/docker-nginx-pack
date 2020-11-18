@@ -96,7 +96,7 @@ XDEBUG_CONFIG=remote_host=172.17.0.1 remote_enable=1
 services:
   proxy:
     image:
-      alighieri/nginx-pack:core
+      inspirium/nginx-pack:core
     container_name:
       core-proxy
     volumes:
