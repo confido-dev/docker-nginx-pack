@@ -13,7 +13,7 @@
 #########################
 ###     BASE NGINX    ###
 #########################
-FROM ubuntu:focal as base
+FROM ubuntu:groovy as base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
@@ -30,15 +30,15 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update && \
     apt-get install -y gnupg curl && \
-    echo 'deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse' > /etc/apt/sources.list && \
-    echo 'deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://archive.ubuntu.com/ubuntu/ focal-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://security.ubuntu.com/ubuntu focal-security main restricted universe multiverse' >> /etc/apt/sources.list && \
+    echo 'deb http://archive.ubuntu.com/ubuntu/ groovy main restricted universe multiverse' > /etc/apt/sources.list && \
+    echo 'deb http://archive.ubuntu.com/ubuntu/ groovy-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
+    echo 'deb http://archive.ubuntu.com/ubuntu/ groovy-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
+    echo 'deb http://security.ubuntu.com/ubuntu groovy-security main restricted universe multiverse' >> /etc/apt/sources.list && \
     echo 'deb https://packages.amplify.nginx.com/debian/ stretch amplify-agent' >> /etc/apt/sources.list && \
     echo 'deb http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu focal main' >> /etc/apt/sources.list && \
     echo 'deb-src http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu focal main' >> /etc/apt/sources.list && \
-    echo 'deb http://ppa.launchpad.net/maxmind/ppa/ubuntu focal main' >> /etc/apt/sources.list && \
-    echo 'deb http://ppa.launchpad.net/ondrej/php/ubuntu focal main' >> /etc/apt/sources.list && \
+    echo 'deb http://ppa.launchpad.net/maxmind/ppa/ubuntu groovy main' >> /etc/apt/sources.list && \
+    echo 'deb http://ppa.launchpad.net/ondrej/php/ubuntu groovy main' >> /etc/apt/sources.list && \
     curl -fs https://nginx.org/keys/nginx_signing.key | apt-key add - > /dev/null 2>&1 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4F4EA0AAE5267A6C && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DE1997DCDE742AFA && \
