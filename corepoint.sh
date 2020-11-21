@@ -24,7 +24,13 @@ if [ -z "$WWW_USER" ]; then
 else echo " ---> Using user ${WWW_USER}"; fi
 # Chowning app files
 if [ -n "${FORCE_CHMOD}" ]; then
+    chown $UID:$GID $WWW_HOME
+    chmod 0750 $WWW_HOME
+fi
+# Chowning app files recursive
+if [ -n "${FORCE_CHMOD_ALL}" ]; then
     chown $UID:$GID $WWW_HOME -R
+    chmod 0750 $WWW_HOME -R
 fi
 # Fixing NGINX
 sh -c "sed -i.old -e 's/^user.*$/user $WWW_USER $WWW_GROUP;/' /etc/nginx/nginx.conf"
