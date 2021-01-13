@@ -35,8 +35,8 @@ RUN apt-get update && \
     echo 'deb http://archive.ubuntu.com/ubuntu/ groovy-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
     echo 'deb http://security.ubuntu.com/ubuntu groovy-security main restricted universe multiverse' >> /etc/apt/sources.list && \
     echo 'deb https://packages.amplify.nginx.com/debian/ stretch amplify-agent' >> /etc/apt/sources.list && \
-    echo 'deb http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu focal main' >> /etc/apt/sources.list && \
-    echo 'deb-src http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu focal main' >> /etc/apt/sources.list && \
+    echo 'deb http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu groovy main' >> /etc/apt/sources.list && \
+    echo 'deb-src http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu groovy main' >> /etc/apt/sources.list && \
     echo 'deb http://ppa.launchpad.net/maxmind/ppa/ubuntu groovy main' >> /etc/apt/sources.list && \
     echo 'deb http://ppa.launchpad.net/ondrej/php/ubuntu groovy main' >> /etc/apt/sources.list && \
     curl -fs https://nginx.org/keys/nginx_signing.key | apt-key add - > /dev/null 2>&1 && \
@@ -134,7 +134,9 @@ RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" != "8.0" ]; then \
                            php${PHP_VERSION}-bcmath \
                            php${PHP_VERSION}-opcache \
                            php${PHP_VERSION}-zip \
-                           php-xdebug \
+                           php${PHP_VERSION}-gd \
+                           php${PHP_VERSION}-imagick \
+                           php${PHP_VERSION}-xdebug \
                            unzip \
 
         && \
@@ -155,7 +157,9 @@ RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" = "8.0" ]; then \
                            php${PHP_VERSION}-bcmath \
                            php${PHP_VERSION}-opcache \
                            php${PHP_VERSION}-zip \
-                           php-xdebug \
+                           php${PHP_VERSION}-gd \
+                           php${PHP_VERSION}-imagick \
+                           php${PHP_VERSION}-xdebug \
                            unzip \
         && \
         apt-get clean && \
