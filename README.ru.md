@@ -1,6 +1,6 @@
 [EN](README.md) | RU
 
-[![GitHub](https://github.githubassets.com/favicons/favicon.png)](https://github.com/inspirium-dev/docker-nginx-pack) 
+[![GitHub](https://github.githubassets.com/favicons/favicon.png)](https://github.com/vigilo-confido/docker-nginx-pack) 
 
 ### Описание
 Докер-контейнер, содержащий в себе подготовленное окружение для Web-приложений на основе Nginx и PHP-FPM с интегрированными функциями Cron и мониторинга через Nginx Amplify. Существует минималистичная вариация `core` без PHP-FPM для работы в роли Reverse Proxy или раздачи статического контента.
@@ -98,7 +98,7 @@ XDEBUG_CONFIG=remote_host=172.17.0.1 remote_enable=1
 services:
   proxy:
     image:
-      inspirium/nginx-pack:core
+      vigiloconfido/nginx-pack:core
     container_name:
       core-proxy
     volumes:
