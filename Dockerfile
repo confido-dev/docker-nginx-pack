@@ -136,7 +136,7 @@ RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" != "8.0" ]; then \
                            php${PHP_VERSION}-zip \
                            php${PHP_VERSION}-gd \
                            php${PHP_VERSION}-imagick \
-                           php-xdebug \
+                           php${PHP_VERSION}-xdebug \
                            unzip \
 
         && \
@@ -159,7 +159,7 @@ RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" = "8.0" ]; then \
                            php${PHP_VERSION}-zip \
                            php${PHP_VERSION}-gd \
                            php${PHP_VERSION}-imagick \
-                           php-xdebug \
+                           php${PHP_VERSION}-xdebug \
                            unzip \
         && \
         apt-get clean && \
