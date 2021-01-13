@@ -9,7 +9,7 @@ for ver in $DOCKER_ARGS; do
   if [ "${DOCKER_VERS}" = "core" ]; then
     docker build --no-cache -t $DOCKER_TEMP:$DOCKER_VERS --build-arg NOT_DUMMY_SSL=$NOT_DUMMY_SSL .
   else
-    docker build -t $DOCKER_TEMP:$DOCKER_VERS --build-arg PHP_VERSION=$DOCKER_VERS --build-arg NOT_DUMMY_SSL=$NOT_DUMMY_SSL .
+    docker build -t $DOCKER_TEMP:php$DOCKER_VERS --build-arg PHP_VERSION=$DOCKER_VERS --build-arg NOT_DUMMY_SSL=$NOT_DUMMY_SSL .
   fi
 
 done

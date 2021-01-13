@@ -3,6 +3,8 @@ for ver in $DOCKER_ARGS; do
   DOCKER_VERS="${ver}"
   DOCKER_NAME="${DOCKER_TEMP}-${DOCKER_VERS}"
 
+  if [ "${DOCKER_VERS}" != "core" ]; then DOCKER_VERS="php${ver}"; fi
+
   echo "Testing ${DOCKER_VERS}"
 
   docker run --name $DOCKER_NAME -d $DOCKER_TEMP:$DOCKER_VERS $
