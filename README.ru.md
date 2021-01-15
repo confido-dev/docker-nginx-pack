@@ -8,13 +8,13 @@
 Есть несколько доступных веток, отличающихся наличием/отсутствием php-fpm и его версией:
 ````
 core
-5.6
-7.0
-7.1
-7.2
-7.3
-7.4
-8.0
+php5.6
+php7.0
+php7.1
+php7.2
+php7.3
+php7.4
+php8.0
 ````
 В случае использование внешней папки с файлами проекта, они должны быть примонтированны в контейнер по пути `/www`.
 
@@ -98,7 +98,7 @@ XDEBUG_CONFIG=remote_host=172.17.0.1 remote_enable=1
 services:
   proxy:
     image:
-      vigiloconfido/nginx-pack:core
+      confido/nginx-pack:core
     container_name:
       core-proxy
     volumes:
