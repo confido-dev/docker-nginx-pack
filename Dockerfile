@@ -163,7 +163,7 @@ RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" = "8.0" ]; then \
         && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* \
-    ; fi \
+    ; fi
 
 RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" = "8.1" ]; then \
         apt-get update && \
