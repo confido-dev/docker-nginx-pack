@@ -120,7 +120,7 @@ FROM core as php
 ARG PHP_VERSION
 ENV PHP_VERSION ${PHP_VERSION}
 
-RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" != "8.0" ]; then \
+RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" != "8.0" ] && [ "${PHP_VERSION}" != "8.1" ]; then \
         apt-get update && \
         apt-get install -y libfcgi0ldbl \
                            php${PHP_VERSION}-common \
