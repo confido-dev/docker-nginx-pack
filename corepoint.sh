@@ -130,6 +130,19 @@ fi
 
 
 #########################
+###   EXIT FUNCTION   ###
+#########################
+
+stop(){
+  echo " :: EXITING"
+  kill -s SIGTERM $(cat /run/supervisord.pid)
+  wait $(cat /run/supervisord.pid)
+  cp /root/.ssh /var/www/_docker/_ssh -RT
+  exit 0
+}
+
+
+#########################
 ###    APP INITING    ###
 #########################
 if [ -f "/entrypoint.sh" ]; then
@@ -160,9 +173,6 @@ cat /etc/supervisor/supervisord_core.conf > /etc/supervisor/supervisord.conf
 if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}" ]; then cat /etc/supervisor/supervisord_amplify.conf >> /etc/supervisor/supervisord.conf; fi
 if [ -f "/crontab.txt"   ]; then cat /etc/supervisor/supervisord_cron.conf >> /etc/supervisor/supervisord.conf; fi
 if [ -n "${PHP_VERSION}" ]; then cat /etc/supervisor/supervisord_php.conf >> /etc/supervisor/supervisord.conf; fi
-/usr/bin/supervisord -c /etc/supervisor/supervisord.conf
-
-#########################
-###      EXITING      ###
-#########################
-echo " :: EXITING"
+trap stop SIGTERM SIGINT SIGQUIT SIGHUP
+/usr/bin/supervisord -c /etc/supervisor/supervisord.conf & SUPERVISOR_PID=$!
+wait "${SUPERVISOR_PID}"
