@@ -13,7 +13,7 @@
 #########################
 ###     BASE NGINX    ###
 #########################
-FROM ubuntu:groovy as base
+FROM ubuntu:hirsute as base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
@@ -30,15 +30,15 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update && \
     apt-get install -y gnupg curl && \
-    echo 'deb http://archive.ubuntu.com/ubuntu/ groovy main restricted universe multiverse' > /etc/apt/sources.list && \
-    echo 'deb http://archive.ubuntu.com/ubuntu/ groovy-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://archive.ubuntu.com/ubuntu/ groovy-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://security.ubuntu.com/ubuntu groovy-security main restricted universe multiverse' >> /etc/apt/sources.list && \
+    echo 'deb http://archive.ubuntu.com/ubuntu/ hirsute main restricted universe multiverse' > /etc/apt/sources.list && \
+    echo 'deb http://archive.ubuntu.com/ubuntu/ hirsute-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
+    echo 'deb http://archive.ubuntu.com/ubuntu/ hirsute-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
+    echo 'deb http://security.ubuntu.com/ubuntu hirsute-security main restricted universe multiverse' >> /etc/apt/sources.list && \
     echo 'deb https://packages.amplify.nginx.com/debian/ stretch amplify-agent' >> /etc/apt/sources.list && \
-    echo 'deb http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu groovy main' >> /etc/apt/sources.list && \
-    echo 'deb-src http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu groovy main' >> /etc/apt/sources.list && \
-    echo 'deb http://ppa.launchpad.net/maxmind/ppa/ubuntu groovy main' >> /etc/apt/sources.list && \
-    echo 'deb http://ppa.launchpad.net/ondrej/php/ubuntu groovy main' >> /etc/apt/sources.list && \
+    echo 'deb http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu hirsute main' >> /etc/apt/sources.list && \
+    echo 'deb-src http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu hirsute main' >> /etc/apt/sources.list && \
+    echo 'deb http://ppa.launchpad.net/maxmind/ppa/ubuntu hirsute main' >> /etc/apt/sources.list && \
+    echo 'deb http://ppa.launchpad.net/ondrej/php/ubuntu hirsute main' >> /etc/apt/sources.list && \
     curl -fs https://nginx.org/keys/nginx_signing.key | apt-key add - > /dev/null 2>&1 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4F4EA0AAE5267A6C && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DE1997DCDE742AFA && \
@@ -120,14 +120,14 @@ FROM core as php
 ARG PHP_VERSION
 ENV PHP_VERSION ${PHP_VERSION}
 
-RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" != "8.0" ]; then \
+
+RUN if [ -n "${PHP_VERSION}" ]; then \
         apt-get update && \
         apt-get install -y libfcgi0ldbl \
                            php${PHP_VERSION}-common \
                            php${PHP_VERSION}-fpm \
                            php${PHP_VERSION}-cli \
                            php${PHP_VERSION}-xml \
-                           php${PHP_VERSION}-json \
                            php${PHP_VERSION}-curl \
                            php${PHP_VERSION}-mysqli \
                            php${PHP_VERSION}-mbstring \
@@ -135,33 +135,14 @@ RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" != "8.0" ]; then \
                            php${PHP_VERSION}-opcache \
                            php${PHP_VERSION}-zip \
                            php${PHP_VERSION}-gd \
-                           php${PHP_VERSION}-imagick \
-                           php${PHP_VERSION}-xdebug \
-                           unzip \
-
-        && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/* \
-    ; fi
-
-RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" = "8.0" ]; then \
-        apt-get update && \
-        apt-get install -y libfcgi0ldbl \
-                           php${PHP_VERSION}-common \
-                           php${PHP_VERSION}-fpm \
-                           php${PHP_VERSION}-cli \
-                           php${PHP_VERSION}-xml \
-                           php${PHP_VERSION}-curl \
-                           php${PHP_VERSION}-mysql \
-                           php${PHP_VERSION}-mbstring \
-                           php${PHP_VERSION}-bcmath \
-                           php${PHP_VERSION}-opcache \
-                           php${PHP_VERSION}-zip \
-                           php${PHP_VERSION}-gd \
-                           php${PHP_VERSION}-imagick \
-                           php${PHP_VERSION}-xdebug \
-                           unzip \
-        && \
+                           unzip && \
+        if [ "${PHP_VERSION}" != "8.0" ] && [ "${PHP_VERSION}" != "8.1" ]; then \
+            apt-get install -y php${PHP_VERSION}-json \
+        ; fi && \
+        if [ "${PHP_VERSION}" != "8.1" ]; then \
+            apt-get install -y php${PHP_VERSION}-imagick \
+                               php${PHP_VERSION}-xdebug \
+        ; fi && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* \
     ; fi
