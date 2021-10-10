@@ -120,14 +120,14 @@ FROM core as php
 ARG PHP_VERSION
 ENV PHP_VERSION ${PHP_VERSION}
 
-RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" != "8.0" ] && [ "${PHP_VERSION}" != "8.1" ]; then \
+
+RUN if [ -n "${PHP_VERSION}" ]; then \
         apt-get update && \
         apt-get install -y libfcgi0ldbl \
                            php${PHP_VERSION}-common \
                            php${PHP_VERSION}-fpm \
                            php${PHP_VERSION}-cli \
                            php${PHP_VERSION}-xml \
-                           php${PHP_VERSION}-json \
                            php${PHP_VERSION}-curl \
                            php${PHP_VERSION}-mysqli \
                            php${PHP_VERSION}-mbstring \
@@ -135,53 +135,14 @@ RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" != "8.0" ] && [ "${PHP_VERS
                            php${PHP_VERSION}-opcache \
                            php${PHP_VERSION}-zip \
                            php${PHP_VERSION}-gd \
-                           php${PHP_VERSION}-imagick \
-                           php${PHP_VERSION}-xdebug \
-                           unzip \
-        && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/* \
-    ; fi
-
-RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" = "8.0" ]; then \
-        apt-get update && \
-        apt-get install -y libfcgi0ldbl \
-                           php${PHP_VERSION}-common \
-                           php${PHP_VERSION}-fpm \
-                           php${PHP_VERSION}-cli \
-                           php${PHP_VERSION}-xml \
-                           php${PHP_VERSION}-curl \
-                           php${PHP_VERSION}-mysql \
-                           php${PHP_VERSION}-mbstring \
-                           php${PHP_VERSION}-bcmath \
-                           php${PHP_VERSION}-opcache \
-                           php${PHP_VERSION}-zip \
-                           php${PHP_VERSION}-gd \
-                           php${PHP_VERSION}-imagick \
-                           php${PHP_VERSION}-xdebug \
-                           unzip \
-        && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/* \
-    ; fi
-
-RUN if [ -n "${PHP_VERSION}" ] && [ "${PHP_VERSION}" = "8.1" ]; then \
-        apt-get update && \
-        apt-get install -y libfcgi0ldbl \
-                           php${PHP_VERSION}-common \
-                           php${PHP_VERSION}-fpm \
-                           php${PHP_VERSION}-cli \
-                           php${PHP_VERSION}-xml \
-                           php${PHP_VERSION}-curl \
-                           php${PHP_VERSION}-mysql \
-                           php${PHP_VERSION}-mbstring \
-                           php${PHP_VERSION}-bcmath \
-                           php${PHP_VERSION}-opcache \
-                           php${PHP_VERSION}-zip \
-                           php${PHP_VERSION}-gd \
-                           php${PHP_VERSION}-xdebug \
-                           unzip \
-        && \
+                           unzip && \
+        if [ "${PHP_VERSION}" != "8.0" ] && [ "${PHP_VERSION}" != "8.1" ]; then \
+            apt-get install -y php${PHP_VERSION}-json \
+        ; fi && \
+        if [ "${PHP_VERSION}" != "8.1" ]; then \
+            apt-get install -y php${PHP_VERSION}-imagick \
+                               php${PHP_VERSION}-xdebug \
+        ; fi && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* \
     ; fi
