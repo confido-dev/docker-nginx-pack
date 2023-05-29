@@ -1,6 +1,7 @@
 [EN](README.md) | RU
 
-[![GitHub](https://github.githubassets.com/favicons/favicon.png)](https://github.com/vigilo-confido/docker-nginx-pack) 
+[![GitHub](/.info/github.png)](https://github.com/confido-dev/docker-nginx-pack) 
+[![DockerHub](/.info/docker.png)](https://hub.docker.com/repository/docker/confido/nginx-pack) 
 
 ### Описание
 Докер-контейнер, содержащий в себе подготовленное окружение для Web-приложений на основе Nginx и PHP-FPM с интегрированными функциями Cron и мониторинга через Nginx Amplify. Существует минималистичная вариация `core` без PHP-FPM для работы в роли Reverse Proxy или раздачи статического контента.
