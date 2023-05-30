@@ -35,10 +35,10 @@ RUN apt-get update && \
     echo 'deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
     echo 'deb http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse' >> /etc/apt/sources.list && \
     echo 'deb http://packages.amplify.nginx.com/py3/ubuntu/ jammy amplify-agent' >> /etc/apt/sources.list && \
-    echo 'deb http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu jammy main' >> /etc/apt/sources.list && \
-    echo 'deb-src http://ppa.launchpad.net/ondrej/nginx-mainline/ubuntu jammy main' >> /etc/apt/sources.list && \
-    echo 'deb http://ppa.launchpad.net/maxmind/ppa/ubuntu jammy main' >> /etc/apt/sources.list && \
-    echo 'deb http://ppa.launchpad.net/ondrej/php/ubuntu jammy main' >> /etc/apt/sources.list && \
+    echo 'deb https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu jammy main' >> /etc/apt/sources.list && \
+    echo 'deb-src https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu jammy main' >> /etc/apt/sources.list && \
+    echo 'deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu jammy main' >> /etc/apt/sources.list && \
+    echo 'deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main' >> /etc/apt/sources.list && \
     curl -fs https://nginx.org/keys/nginx_signing.key | apt-key add - > /dev/null 2>&1 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4F4EA0AAE5267A6C && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DE1997DCDE742AFA && \
@@ -138,7 +138,7 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-imagick \
                            php${PHP_VERSION}-xdebug \
                            unzip && \
-        if [ "${PHP_VERSION}" != "8.0" ] && [ "${PHP_VERSION}" != "8.1" ]; then \
+        if [ "${PHP_VERSION}" != "8.0" ] && [ "${PHP_VERSION}" != "8.1" ] && [ "${PHP_VERSION}" != "8.2" ]; then \
             apt-get install -y php${PHP_VERSION}-json \
         ; fi && \
         apt-get clean && \
