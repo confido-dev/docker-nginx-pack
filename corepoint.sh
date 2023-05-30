@@ -75,8 +75,8 @@ rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
 if [ -f "/etc/nginx/data/geo2.mmdb" ]; then
     NGINX_GEOIP=true
     echo " ---> Enabling MaxMind GeoIP module"
-    cat /etc/nginx/conf.d/geoip.conf.bkp > /etc/nginx/conf.d/geoip.conf
-    cat /etc/nginx/fastcgi.d/geoip.conf.bkp > /etc/nginx/fastcgi.d/geoip.conf
+    cat /etc/nginx/conf.d/geoip.disabled > /etc/nginx/conf.d/geoip.conf
+    cat /etc/nginx/fastcgi.d/geoip.disabled > /etc/nginx/fastcgi.d/geoip.conf
     ln -sf /usr/share/nginx/modules-available/mod-http-geoip2.conf /etc/nginx/modules-enabled/50-mod-http-geoip2.conf
 fi
 # XDebug
