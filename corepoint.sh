@@ -71,12 +71,15 @@ echo " :: INITING OPTIONS"
 rm -f /etc/nginx/modules-enabled/50-mod-http-geoip2.conf
 # Cleaning XDebug
 rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
+# Resetting proxy_pass headers
+cat /etc/nginx/conf.d/sources/proxy_basic.conf > /etc/nginx/conf.d/proxy.conf
 # MaxMind GeoIP
 if [ -f "/etc/nginx/data/geo2.mmdb" ]; then
     NGINX_GEOIP=true
     echo " ---> Enabling MaxMind GeoIP module"
-    cat /etc/nginx/conf.d/geoip.disabled > /etc/nginx/conf.d/geoip.conf
-    cat /etc/nginx/fastcgi.d/geoip.disabled > /etc/nginx/fastcgi.d/geoip.conf
+    cat /etc/nginx/conf.d/sources/geoip.conf >> /etc/nginx/conf.d/geoip.conf
+    cat /etc/nginx/fastcgi.d/sources/geoip.conf >> /etc/nginx/fastcgi.d/geoip.conf
+    cat /etc/nginx/conf.d/sources/proxy_geoip.conf >> /etc/nginx/conf.d/proxy.conf
     ln -sf /usr/share/nginx/modules-available/mod-http-geoip2.conf /etc/nginx/modules-enabled/50-mod-http-geoip2.conf
 fi
 # XDebug
