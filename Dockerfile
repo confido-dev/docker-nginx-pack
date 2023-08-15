@@ -39,6 +39,7 @@ RUN apt-get update && \
     echo 'deb-src https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu jammy main' >> /etc/apt/sources.list && \
     echo 'deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu jammy main' >> /etc/apt/sources.list && \
     echo 'deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main' >> /etc/apt/sources.list && \
+    echo 'deb https://ppa.launchpadcontent.net/ondrej/php-qa/ubuntu jammy main ' >> /etc/apt/sources.list && \
     curl -fs https://nginx.org/keys/nginx_signing.key | apt-key add - > /dev/null 2>&1 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4F4EA0AAE5267A6C && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DE1997DCDE742AFA && \
