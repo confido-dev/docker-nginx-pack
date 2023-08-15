@@ -4,9 +4,11 @@ for ver in $DOCKER_ARGS; do
 
   if [ "${DOCKER_VERS}" != "core" ]; then DOCKER_VERS="php${ver}"; fi
 
-  echo "Pushing ${DOCKER_VERS}"
+  echo "Pushing ${DOCKER_VERS}:"
+  echo " from ${DOCKER_TEMP}:${DOCKER_VERS}"
+  echo " to ${DOCKER_BASE}:${DOCKER_VERS}"
 
-  docker tag $DOCKER_TEMP:$DOCKER_VERS $DOCKER_BASE:$DOCKER_VERS && docker push $DOCKER_BASE:$DOCKER_VERS
+  docker image tag $DOCKER_TEMP:$DOCKER_VERS $DOCKER_BASE:$DOCKER_VERS && docker image push $DOCKER_BASE:$DOCKER_VERS
 
 done
 

@@ -39,6 +39,7 @@ RUN apt-get update && \
     echo 'deb-src https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu jammy main' >> /etc/apt/sources.list && \
     echo 'deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu jammy main' >> /etc/apt/sources.list && \
     echo 'deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main' >> /etc/apt/sources.list && \
+    echo 'deb https://ppa.launchpadcontent.net/ondrej/php-qa/ubuntu jammy main ' >> /etc/apt/sources.list && \
     curl -fs https://nginx.org/keys/nginx_signing.key | apt-key add - > /dev/null 2>&1 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4F4EA0AAE5267A6C && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DE1997DCDE742AFA && \
@@ -135,11 +136,13 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-opcache \
                            php${PHP_VERSION}-zip \
                            php${PHP_VERSION}-gd \
-                           php${PHP_VERSION}-imagick \
-                           php${PHP_VERSION}-xdebug \
                            unzip && \
-        if [ "${PHP_VERSION}" != "8.0" ] && [ "${PHP_VERSION}" != "8.1" ] && [ "${PHP_VERSION}" != "8.2" ]; then \
+        if [ ! "${PHP_VERSION}" =~ ^8\.\d$ ]; then \
             apt-get install -y php${PHP_VERSION}-json \
+        ; fi && \
+        if [ "${PHP_VERSION}" != "8.3" ]; then \
+            apt-get install -y php${PHP_VERSION}-imagick \
+                               php${PHP_VERSION}-xdebug \
         ; fi && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* \
