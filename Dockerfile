@@ -136,11 +136,13 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-opcache \
                            php${PHP_VERSION}-zip \
                            php${PHP_VERSION}-gd \
-                           php${PHP_VERSION}-imagick \
-                           php${PHP_VERSION}-xdebug \
                            unzip && \
-        if [ "${PHP_VERSION}" != "8.0" ] && [ "${PHP_VERSION}" != "8.1" ] && [ "${PHP_VERSION}" != "8.2" ]; then \
+        if [ ! "${PHP_VERSION}" =~ ^8\.\d$ ]; then \
             apt-get install -y php${PHP_VERSION}-json \
+        ; fi && \
+        if [ "${PHP_VERSION}" != "8.3" ]; then \
+            apt-get install -y php${PHP_VERSION}-imagick \
+                               php${PHP_VERSION}-xdebug \
         ; fi && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* \
