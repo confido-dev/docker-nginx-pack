@@ -43,6 +43,8 @@ RUN apt-get update && \
     curl -s 'https://nginx.org/keys/nginx_signing.key' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/nginx_org.gpg --import && \
     curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4f4ea0aae5267a6c' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/ondrej_ppa.gpg --import && \
     curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/maxmind_ppa.gpg --import && \
+    chmod 644 /etc/apt/trusted.gpg.d -R &&  \
+    rm /etc/apt/trusted.gpg.d/*~\
     apt-get update && \
     apt-get upgrade -y && \
     apt-get dist-upgrade -y && \
