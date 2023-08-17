@@ -29,7 +29,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GIDS=""
 
 RUN apt-get update && \
-    apt-get install -y gnupg wget curl python2 && \
+    apt-get install -y apt-transport-https gnupg wget curl python2 && \
     echo 'deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse' > /etc/apt/sources.list && \
     echo 'deb http://archive.ubuntu.com/ubuntu/ jammy-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
     echo 'deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
@@ -40,9 +40,9 @@ RUN apt-get update && \
     echo 'deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu jammy main' >> /etc/apt/sources.list && \
     echo 'deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main' >> /etc/apt/sources.list && \
     echo 'deb https://ppa.launchpadcontent.net/ondrej/php-qa/ubuntu jammy main ' >> /etc/apt/sources.list && \
-    curl -fs https://nginx.org/keys/nginx_signing.key | apt-key add - > /dev/null 2>&1 && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4F4EA0AAE5267A6C && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DE1997DCDE742AFA && \
+    curl -s 'https://nginx.org/keys/nginx_signing.key' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/nginx_org.gpg --import && \
+    curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4f4ea0aae5267a6c' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/ondrej_ppa.gpg --import && \
+    curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/maxmind_ppa.gpg --import && \
     apt-get update && \
     apt-get upgrade -y && \
     apt-get dist-upgrade -y && \
