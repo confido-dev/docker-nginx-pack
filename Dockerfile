@@ -29,7 +29,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GIDS=""
 
 RUN apt-get update && \
-    apt-get install -y gnupg curl  python2&& \
+    apt-get install -y gnupg wget curl python2 && \
     echo 'deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse' > /etc/apt/sources.list && \
     echo 'deb http://archive.ubuntu.com/ubuntu/ jammy-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
     echo 'deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
@@ -49,7 +49,6 @@ RUN apt-get update && \
     apt-get install -y cron supervisor \
                        nginx nginx-amplify-agent \
                        libmaxminddb0 libmaxminddb-dev mmdb-bin && \
-    apt-get purge -y gnupg  && \
     apt-get autoremove --purge -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
