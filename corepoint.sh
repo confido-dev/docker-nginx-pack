@@ -66,7 +66,7 @@ done
 #########################
 echo " :: INITING OPTIONS"
 # Cleaning RealIP
-: > /etc/nginx/conf.d/real.conf
+: > /etc/nginx/conf.d/realip.conf
 # Cleaning GeoIP
 : > /etc/nginx/conf.d/geoip.conf
 : > /etc/nginx/fastcgi.d/geoip.conf
