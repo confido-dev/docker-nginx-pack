@@ -65,14 +65,21 @@ done
 ###      OPTIONS      ###
 #########################
 echo " :: INITING OPTIONS"
+# Cleaning RealIP
+: > /etc/nginx/conf.d/realip.conf
 # Cleaning GeoIP
 : > /etc/nginx/conf.d/geoip.conf
 : > /etc/nginx/fastcgi.d/geoip.conf
 rm -f /etc/nginx/modules-enabled/50-mod-http-geoip2.conf
-# Cleaning XDebug
-rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
 # Resetting proxy_pass headers
 cat /etc/nginx/conf.d/sources/proxy-headers-basic.conf > /etc/nginx/conf.d/proxy-headers.conf
+# Cleaning XDebug
+rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
+# RealIP
+if [ -n "${TRUSTED_PROXIES}" ]; then
+    echo " ---> Enabling NGINX RealIP module"
+    cat /etc/nginx/fastcgi.d/sources/realip.conf >> /etc/nginx/fastcgi.d/realip.conf
+fi
 # MaxMind GeoIP
 if [ -f "/etc/nginx/data/geo2.mmdb" ]; then
     NGINX_GEOIP=true
