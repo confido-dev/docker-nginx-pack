@@ -78,7 +78,7 @@ rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
 # RealIP
 if [ -n "${TRUSTED_PROXIES}" ]; then
     echo " ---> Enabling NGINX RealIP module"
-    cat /etc/nginx/fastcgi.d/sources/realip.conf >> /etc/nginx/fastcgi.d/realip.conf
+    cat /etc/nginx/conf.d/sources/realip.conf >> /etc/nginx/conf.d/realip.conf
 fi
 # MaxMind GeoIP
 if [ -f "/etc/nginx/data/geo2.mmdb" ]; then
