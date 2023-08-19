@@ -76,7 +76,7 @@ cat /etc/nginx/conf.d/sources/proxy-headers-basic.conf > /etc/nginx/conf.d/proxy
 # Cleaning XDebug
 rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
 # RealIP
-if [ -n "${TRUSTED_PROXIES}" ]; then then
+if [ -n "${TRUSTED_PROXIES}" ]; then
     echo " ---> Enabling NGINX RealIP module"
     cat /etc/nginx/fastcgi.d/sources/realip.conf >> /etc/nginx/fastcgi.d/realip.conf
 fi
