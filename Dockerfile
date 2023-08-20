@@ -46,8 +46,6 @@ RUN apt-get update && \
     curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/maxmind_ppa.gpg --import && \
     chmod 644 /etc/apt/trusted.gpg.d/* && \
     apt-get update && \
-    apt-get upgrade -y && \
-    apt-get dist-upgrade -y && \
     apt-get install -y cron supervisor \
                        nginx nginx-amplify-agent \
                        libmaxminddb0 libmaxminddb-dev mmdb-bin && \
@@ -71,6 +69,7 @@ RUN apt-get update && \
     apt-get install git dpkg-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
     if [ ! -d "ngx_http_geoip2_module" ]; then git clone https://github.com/leev/ngx_http_geoip2_module.git; fi && \
     echo './configure' > /tmp/nginx.sh && \
     nginx -V 2>&1 | grep 'configure arguments' | sed 's/.*configure arguments: //' | sed 's/ --add-dynamic-module.*$//' >> /tmp/nginx.sh && \
