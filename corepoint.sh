@@ -120,7 +120,7 @@ fi
 ###      TESTING      ###
 #########################
 echo " :: TESTING NGINX"
-nginx -t /etc/nginx/nginx.conf
+nginx -t
 if [ -n "${PHP_VERSION}" ]; then
     echo " :: TESTING PHP-FPM"
     php-fpm --fpm-config /etc/php/current/fpm/php-fpm.conf --allow-to-run-as-root -t
