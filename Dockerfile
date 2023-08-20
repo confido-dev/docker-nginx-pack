@@ -17,11 +17,12 @@ FROM ubuntu:jammy as base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
-    AMPLIFY_TAG="" \
     AMPLIFY_HOST="" \
     AMPLIFY_UUID="" \
     AMPLIFY_NAME="" \
     AMPLIFY_KEY="" \
+    AMPLIFY_TAG="" \
+    AMPLIFY_HINT="default" \
     NGINX_REALIP="" \
     NGINX_GEOIP=false \
     WWW_HOME="/www" \
