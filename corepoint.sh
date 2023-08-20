@@ -76,8 +76,10 @@ cat /etc/nginx/conf.d/sources/proxy-headers-basic.conf > /etc/nginx/conf.d/proxy
 # Cleaning XDebug
 rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
 # RealIP
-if [ -n "${TRUSTED_PROXIES}" ]; then
+if [ -n "${NGINX_REALIP}" ]; then
     echo " ---> Enabling NGINX RealIP module"
+    sh -c "sed -i.old -e 's/^set_real_ip_from.*$/set_real_ip_from = $NGINX_REALIP;/' /etc/nginx/conf.d/sources/realip.conf"
+    rm /etc/nginx/conf.d/sources/realip.conf.old
     cat /etc/nginx/conf.d/sources/realip.conf >> /etc/nginx/conf.d/realip.conf
 fi
 # MaxMind GeoIP

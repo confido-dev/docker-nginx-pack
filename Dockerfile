@@ -22,6 +22,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     AMPLIFY_UUID="" \
     AMPLIFY_NAME="" \
     AMPLIFY_KEY="" \
+    NGINX_REALIP="" \
     NGINX_GEOIP=false \
     WWW_HOME="/www" \
     GID=0 \
@@ -78,7 +79,7 @@ RUN echo './configure' > /tmp/nginx.sh && \
     cd nginx-* && /tmp/nginx.sh && make modules && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
-COPY ./ssl /tmp/ssl
+COPY --chmod=755 ./ssl /tmp/ssl
 
 RUN if [ "${NOT_DUMMY_SSL}" = true ]; then \
         rm /tmp/ssl/* && \
@@ -105,8 +106,8 @@ RUN rm -rf /etc/nginx/modules-enabled/* && \
     mv /etc/nginx/fastcgi.conf /etc/nginx/fastcgi.default.conf && \
     rm -f /etc/nginx/nginx.conf
 
-COPY ./nginx /etc/nginx
-COPY ./amplify /etc/amplify-agent
+COPY --chmod=755 ./nginx /etc/nginx
+COPY --chmod=755 ./amplify /etc/amplify-agent
 
 RUN unlink /var/log/nginx/error.log && \
     unlink /var/log/nginx/access.log && \
@@ -161,8 +162,8 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
         curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     ; fi
 
-COPY ./php-fpm/fpm /etc/php/current/fpm
-COPY ./php-fpm/php.ini /etc/php/current/fpm/conf.d/99-app.ini
+COPY --chmod=755 ./php-fpm/fpm /etc/php/current/fpm
+COPY --chmod=755 ./php-fpm/php.ini /etc/php/current/fpm/conf.d/99-app.ini
 
 RUN if [ -z "$(ls -A "$WWW_HOME")" ]; then \
         if [ -n "${PHP_VERSION}" ]; then \
@@ -183,9 +184,9 @@ RUN if [ -z "${PHP_VERSION}" ]; then \
 #########################
 FROM php as final
 
-COPY ./health.sh /health.sh
-COPY ./corepoint.sh /corepoint.sh
-COPY ./supervisor /etc/supervisor
+COPY --chmod=644 ./health.sh /health.sh
+COPY --chmod=644 ./corepoint.sh /corepoint.sh
+COPY --chmod=755 ./supervisor /etc/supervisor
 
 RUN mkfifo --mode 0666 /tmp/docker.log
 
