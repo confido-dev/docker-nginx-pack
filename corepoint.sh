@@ -33,12 +33,12 @@ if [ -n "${FORCE_CHMOD_ALL}" ]; then
     chmod 0750 $WWW_HOME -R
 fi
 # Fixing NGINX
-sh -c "sed -i.old -e 's/^user.*$/user $WWW_USER $WWW_GROUP;/' /etc/nginx/nginx.conf"
+sh -c "sed -i.old -e 's~^user.*$~user $WWW_USER $WWW_GROUP;~' /etc/nginx/nginx.conf"
 rm -f /etc/nginx/nginx.conf.old
 # Fixing PHP-FPM
 if [ -n "${PHP_VERSION}" ]; then
-    sh -c "sed -i.old -e 's/^user =.*$/user = $WWW_USER/' /etc/php/current/fpm/pool.d/www.conf"
-    sh -c "sed -i.old -e 's/^group =.*$/group = $WWW_GROUP/' /etc/php/current/fpm/pool.d/www.conf"
+    sh -c "sed -i.old -e 's~^user =.*$~user = $WWW_USER~' /etc/php/current/fpm/pool.d/www.conf"
+    sh -c "sed -i.old -e 's~^group =.*$~group = $WWW_GROUP~' /etc/php/current/fpm/pool.d/www.conf"
 	rm -f /etc/php/current/fpm/pool.d/www.conf.old
 fi
 
@@ -78,7 +78,7 @@ rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
 # RealIP
 if [ -n "${NGINX_REALIP}" ]; then
     echo " ---> Enabling NGINX RealIP module"
-    sh -c "sed -i.old -e 's/^set_real_ip_from.*$/set_real_ip_from = $NGINX_REALIP;/' /etc/nginx/conf.d/sources/realip.conf"
+    sh -c "sed -i.old -e 's~^set_real_ip_from.*$~set_real_ip_from = $NGINX_REALIP;~' /etc/nginx/conf.d/sources/realip.conf"
     rm /etc/nginx/conf.d/sources/realip.conf.old
     cat /etc/nginx/conf.d/sources/realip.conf >> /etc/nginx/conf.d/realip.conf
 fi
@@ -105,11 +105,11 @@ fi
 if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}" ]; then
     echo " :: SETTING AMPLIFY"
     if [ -n "${PHP_VERSION}" ]; then FPM_ENABLED=True; else FPM_ENABLED=False; fi
-    sh -c "sed -i.old -e 's/^phpfpm =.*$/phpfpm = $FPM_ENABLED/' /etc/amplify-agent/agent.conf"
-    sh -c "sed -i.old -e 's/^api_key =.*$/api_key = $AMPLIFY_KEY/' /etc/amplify-agent/agent.conf"
-    sh -c "sed -i.old -e 's/^hostname =.*$/hostname = $AMPLIFY_HOST/' /etc/amplify-agent/agent.conf"
-    sh -c "sed -i.old -e 's/^uuid =.*$/uuid = $AMPLIFY_UUID/' /etc/amplify-agent/agent.conf"
-    sh -c "sed -i.old -e 's/^imagename =.*$/imagename = $AMPLIFY_NAME/' /etc/amplify-agent/agent.conf"
+    sh -c "sed -i.old -e 's~^phpfpm =.*$~phpfpm = $FPM_ENABLED~' /etc/amplify-agent/agent.conf"
+    sh -c "sed -i.old -e 's~^api_key =.*$~api_key = $AMPLIFY_KEY~' /etc/amplify-agent/agent.conf"
+    sh -c "sed -i.old -e 's~^hostname =.*$~hostname = $AMPLIFY_HOST~' /etc/amplify-agent/agent.conf"
+    sh -c "sed -i.old -e 's~^uuid =.*$~uuid = $AMPLIFY_UUID~' /etc/amplify-agent/agent.conf"
+    sh -c "sed -i.old -e 's~^imagename =.*$~imagename = $AMPLIFY_NAME~' /etc/amplify-agent/agent.conf"
     rm /etc/amplify-agent/agent.conf.old && chmod 640 /etc/amplify-agent/agent.conf
 fi
 
