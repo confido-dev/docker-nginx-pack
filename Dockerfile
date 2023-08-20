@@ -17,7 +17,7 @@ FROM ubuntu:jammy as base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
-    AMPLIFY_TAG="default" \
+    AMPLIFY_TAG="" \
     AMPLIFY_HOST="" \
     AMPLIFY_UUID="" \
     AMPLIFY_NAME="" \
