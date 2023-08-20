@@ -65,13 +65,14 @@ ENV NOT_DUMMY_SSL ${NOT_DUMMY_SSL}
 
 WORKDIR /tmp
 
+#COPY ./ngx_http_geoip2_module /tmp/ngx_http_geoip2_module
+
 RUN apt-get update && \
     apt-get install git dpkg-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
-    if [ ! -d "ngx_http_geoip2_module" ]; then git clone https://github.com/leev/ngx_http_geoip2_module.git; fi
-
-RUN echo './configure' > /tmp/nginx.sh && \
+    if [ ! -d "ngx_http_geoip2_module" ]; then git clone https://github.com/leev/ngx_http_geoip2_module.git; fi && \
+    echo './configure' > /tmp/nginx.sh && \
     nginx -V 2>&1 | grep 'configure arguments' | sed 's/.*configure arguments: //' | sed 's/ --add-dynamic-module.*$//' >> /tmp/nginx.sh && \
     echo '--add-dynamic-module=../ngx_http_geoip2_module' >> /tmp/nginx.sh && \
     sed -i ':a;N;$!ba;s/\n/ /g' /tmp/nginx.sh && \
@@ -79,7 +80,7 @@ RUN echo './configure' > /tmp/nginx.sh && \
     cd nginx-* && /tmp/nginx.sh && make modules && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
-COPY --chmod=755 ./ssl /tmp/ssl
+COPY ./ssl /tmp/ssl
 
 RUN if [ "${NOT_DUMMY_SSL}" = true ]; then \
         rm /tmp/ssl/* && \
@@ -96,21 +97,23 @@ RUN if [ "${NOT_DUMMY_SSL}" = true ]; then \
 FROM base as core
 
 COPY --from=builder /tmp/ssl /etc/nginx/ssl
-COPY --from=builder /tmp/ngx_http_geoip2_module.so /usr/lib/nginx/modules/
+COPY --from=builder --chmod=644 /tmp/ngx_http_geoip2_module.so /usr/lib/nginx/modules/ngx_http_geoip2_module.so
 
 RUN rm -rf /etc/nginx/modules-enabled/* && \
-        chmod 644 /usr/lib/nginx/modules/ngx_http_geoip2_module.so && \
     echo "load_module modules/ngx_http_geoip2_module.so;" > /usr/share/nginx/modules-available/mod-http-geoip2.conf && \
     rm -rf /etc/nginx/sites-enabled/* && \
     rm -f /etc/nginx/fastcgi_params && \
     mv /etc/nginx/fastcgi.conf /etc/nginx/fastcgi.default.conf && \
     rm -f /etc/nginx/nginx.conf
 
-COPY --chmod=755 ./nginx /etc/nginx
-COPY --chmod=755 ./amplify /etc/amplify-agent
+COPY ./nginx /etc/nginx
+COPY ./amplify /etc/amplify-agent
+COPY ./supervisor /etc/supervisor
 
-RUN unlink /var/log/nginx/error.log && \
+RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xargs -0 chmod 750 && \
+    find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type f -print0 | xargs -0 chmod 640 && \
     unlink /var/log/nginx/access.log && \
+    unlink /var/log/nginx/error.log && \
     mkdir $WWW_HOME -p
 
 
@@ -121,7 +124,6 @@ FROM core as php
 
 ARG PHP_VERSION
 ENV PHP_VERSION ${PHP_VERSION}
-
 
 RUN if [ -n "${PHP_VERSION}" ]; then \
         apt-get update && \
@@ -146,35 +148,22 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
             apt-get install -y php${PHP_VERSION}-imagick \
                                php${PHP_VERSION}-xdebug \
         ; fi && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/* \
-    ; fi
-
-RUN if [ -n "${PHP_VERSION}" ]; then \
+        apt-get clean && rm -rf /var/lib/apt/lists/* && \
         mv /etc/php/${PHP_VERSION} /etc/php/current && ln -s /etc/php/current /etc/php/${PHP_VERSION} && \
         rm -rf /etc/php/current/cli/conf.d && ln -s /etc/php/current/fpm/conf.d /etc/php/current/cli/conf.d && \
         rm -f /etc/php/current/cli/php.ini && ln -s /etc/php/current/fpm/php.ini /etc/php/current/cli/php.ini && \
         ln -s /usr/sbin/php-fpm${PHP_VERSION} /usr/sbin/php-fpm && \
-        rm -rf /etc/php/latest/fpm/pool.d/* \
-    ; fi
-
-RUN if [ -n "${PHP_VERSION}" ]; then \
+        rm -rf /etc/php/latest/fpm/pool.d/* && \
         curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     ; fi
 
-COPY --chmod=755 ./php-fpm/fpm /etc/php/current/fpm
-COPY --chmod=755 ./php-fpm/php.ini /etc/php/current/fpm/conf.d/99-app.ini
+COPY ./php-fpm/fpm /etc/php/current/fpm
+COPY ./php-fpm/php.ini /etc/php/current/fpm/conf.d/99-app.ini
 
-RUN if [ -z "$(ls -A "$WWW_HOME")" ]; then \
-        if [ -n "${PHP_VERSION}" ]; then \
-            echo '<?php phpinfo(); ?>' > $WWW_HOME/index.php \
-        ; else \
-            echo 'Hello World!' > $WWW_HOME/index.html \
-        ; fi \
-    ; fi
-
-RUN if [ -z "${PHP_VERSION}" ]; then \
-        rm -rf /etc/supervisor && \
+RUN if [ -n "${PHP_VERSION}" ]; then \
+        find /etc/php/ -type d -print0 | xargs -0 chmod 750 && \
+        find /etc/php/ -type f -print0 | xargs -0 chmod 640 \
+    ; else \
         rm -rf /etc/php \
     ; fi
 
@@ -184,9 +173,8 @@ RUN if [ -z "${PHP_VERSION}" ]; then \
 #########################
 FROM php as final
 
-COPY --chmod=644 ./health.sh /health.sh
-COPY --chmod=644 ./corepoint.sh /corepoint.sh
-COPY --chmod=755 ./supervisor /etc/supervisor
+COPY --chmod=750 ./health.sh /health.sh
+COPY --chmod=750 ./corepoint.sh /corepoint.sh
 
 RUN mkfifo --mode 0666 /tmp/docker.log
 

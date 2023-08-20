@@ -19,7 +19,7 @@ echo " ---> Using UID #${UID}"
 WWW_USER=$(awk -v val=$UID -F ":" '$3==val{print $1}' /etc/passwd)
 if [ -z "$WWW_USER" ]; then
     WWW_USER="u${UID}"
-    adduser --shell /bin/bash --home $WWW_HOME --uid $UID --gid $GID --disabled-password --no-create-home --gecos "" $WWW_USER
+    adduser --shell /bin/bash --home /home/$WWW_USER --uid $UID --gid $GID --disabled-password --gecos "" $WWW_USER
     echo " ---> User ${WWW_USER} created"
 else echo " ---> Using user ${WWW_USER}"; fi
 # Chowning app files
@@ -78,8 +78,9 @@ rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
 # RealIP
 if [ -n "${NGINX_REALIP}" ]; then
     echo " ---> Enabling NGINX RealIP module"
-    sh -c "sed -i.old -e 's~^set_real_ip_from.*$~set_real_ip_from = $NGINX_REALIP;~' /etc/nginx/conf.d/sources/realip.conf"
-    rm /etc/nginx/conf.d/sources/realip.conf.old
+    for i in ${NGINX_REALIP//,/ }; do
+        echo "set_real_ip_from $i;" >> /etc/nginx/conf.d/realip.conf
+    done
     cat /etc/nginx/conf.d/sources/realip.conf >> /etc/nginx/conf.d/realip.conf
 fi
 # MaxMind GeoIP
