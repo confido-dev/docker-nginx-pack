@@ -111,23 +111,8 @@ if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}"
     sh -c "sed -i.old -e 's~^hostname =.*$~hostname = $AMPLIFY_HOST~' /etc/amplify-agent/agent.conf"
     sh -c "sed -i.old -e 's~^uuid =.*$~uuid = $AMPLIFY_UUID~' /etc/amplify-agent/agent.conf"
     sh -c "sed -i.old -e 's~^imagename =.*$~imagename = $AMPLIFY_NAME~' /etc/amplify-agent/agent.conf"
+    sh -c "sed -i.old -e 's~^tags =.*$~tags = $AMPLIFY_TAG~' /etc/amplify-agent/agent.conf"
     rm /etc/amplify-agent/agent.conf.old && chmod 640 /etc/amplify-agent/agent.conf
-fi
-
-
-#########################
-###      TAGGING      ###
-#########################
-echo " :: TAGGING CONFS"
-# Cleaning
-rm -rf /etc/nginx/nginx-${AMPLIFY_TAG}.conf
-if [ -n "${PHP_VERSION}" ]; then
-    rm -rf /etc/php/current/fpm/php-fpm-${AMPLIFY_TAG}.conf
-fi
-# Tagging
-ln -s /etc/nginx/nginx.conf /etc/nginx/nginx-${AMPLIFY_TAG}.conf
-if [ -n "${PHP_VERSION}" ]; then
-    ln -s /etc/php/current/fpm/php-fpm.conf /etc/php/current/fpm/php-fpm-${AMPLIFY_TAG}.conf
 fi
 
 
@@ -135,10 +120,10 @@ fi
 ###      TESTING      ###
 #########################
 echo " :: TESTING NGINX"
-nginx -t
+nginx -t /etc/nginx/nginx.conf
 if [ -n "${PHP_VERSION}" ]; then
     echo " :: TESTING PHP-FPM"
-    php-fpm --fpm-config /etc/php/current/fpm/php-fpm-${AMPLIFY_TAG}.conf --allow-to-run-as-root -t
+    php-fpm --fpm-config /etc/php/current/fpm/php-fpm.conf --allow-to-run-as-root -t
 fi
 
 
