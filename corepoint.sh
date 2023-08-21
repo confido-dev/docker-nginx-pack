@@ -188,7 +188,7 @@ if [ -f "/crontab.txt"   ]; then cat /etc/supervisor/supervisord_cron.conf >> /e
 if [ -n "${PHP_VERSION}" ]; then cat /etc/supervisor/supervisord_php.conf >> /etc/supervisor/supervisord.conf; fi
 unset NGINX_REALIP PHP_VERSION
 unset GID UID FORCE_CHMOD FORCE_CHMOD_ALL
-unset AMPLIFY_HOST AMPLIFY_UUID AMPLIFY_NAME AMPLIFY_KEY AMPLIFY_TAG AMPLIFY_HINT
+unset AMPLIFY_HOST AMPLIFY_UUID AMPLIFY_NAME AMPLIFY_KEY AMPLIFY_TAG
 trap stop SIGTERM SIGINT SIGQUIT SIGHUP
 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf & SUPERVISOR_PID=$!
 wait "${SUPERVISOR_PID}"
