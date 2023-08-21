@@ -101,7 +101,6 @@ fi
 #########################
 ###     AMPLIFYING    ###
 #########################
-# Applying
 if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}" ]; then
     echo " :: SETTING AMPLIFY"
     if [ -n "${PHP_VERSION}" ]; then FPM_ENABLED=True; else FPM_ENABLED=False; fi
@@ -145,7 +144,6 @@ fi
 #########################
 ###   EXIT FUNCTION   ###
 #########################
-
 stop(){
   echo " :: EXITING"
   kill -s SIGTERM $(cat /run/supervisord.pid)
