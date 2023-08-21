@@ -85,7 +85,6 @@ if [ -n "${NGINX_REALIP}" ]; then
 fi
 # MaxMind GeoIP
 if [ -f "/etc/nginx/data/geo2.mmdb" ]; then
-    NGINX_GEOIP=true
     echo " ---> Enabling MaxMind GeoIP module"
     cat /etc/nginx/conf.d/sources/geoip.conf >> /etc/nginx/conf.d/geoip.conf
     cat /etc/nginx/fastcgi.d/sources/geoip.conf >> /etc/nginx/fastcgi.d/geoip.conf
@@ -102,7 +101,7 @@ fi
 #########################
 ###     AMPLIFYING    ###
 #########################
-# Applying vars
+# Applying
 if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}" ]; then
     echo " :: SETTING AMPLIFY"
     if [ -n "${PHP_VERSION}" ]; then FPM_ENABLED=True; else FPM_ENABLED=False; fi
@@ -187,6 +186,9 @@ cat /etc/supervisor/supervisord_core.conf > /etc/supervisor/supervisord.conf
 if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}" ]; then cat /etc/supervisor/supervisord_amplify.conf >> /etc/supervisor/supervisord.conf; fi
 if [ -f "/crontab.txt"   ]; then cat /etc/supervisor/supervisord_cron.conf >> /etc/supervisor/supervisord.conf; fi
 if [ -n "${PHP_VERSION}" ]; then cat /etc/supervisor/supervisord_php.conf >> /etc/supervisor/supervisord.conf; fi
+unset NGINX_REALIP PHP_VERSION
+unset GID UID FORCE_CHMOD FORCE_CHMOD_ALL
+unset AMPLIFY_HOST AMPLIFY_UUID AMPLIFY_NAME AMPLIFY_KEY AMPLIFY_TAG AMPLIFY_HINT
 trap stop SIGTERM SIGINT SIGQUIT SIGHUP
 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf & SUPERVISOR_PID=$!
 wait "${SUPERVISOR_PID}"
