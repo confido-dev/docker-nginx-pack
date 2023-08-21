@@ -24,11 +24,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     AMPLIFY_TAG="" \
     AMPLIFY_HINT="default" \
     NGINX_REALIP="" \
-    NGINX_GEOIP=false \
     WWW_HOME="/www" \
     GID=0 \
-    UID=0 \
-    GIDS=""
+    UID=0""
 
 RUN apt-get update && \
     apt-get install -y apt-transport-https gnupg wget curl python2 && \
