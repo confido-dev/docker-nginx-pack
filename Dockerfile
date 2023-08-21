@@ -145,6 +145,7 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
         if [ "${PHP_VERSION}" != "8.3" ]; then \
             apt-get install -y php${PHP_VERSION}-imagick \
                                php${PHP_VERSION}-xdebug \
+                               php${PHP_VERSION}-apcu \
         ; fi && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && \
         mv /etc/php/${PHP_VERSION} /etc/php/current && ln -s /etc/php/current /etc/php/${PHP_VERSION} && \
