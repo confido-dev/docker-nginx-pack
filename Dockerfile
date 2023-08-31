@@ -161,8 +161,8 @@ COPY ./php-fpm/fpm /etc/php/current/fpm
 COPY ./php-fpm/php.ini /etc/php/current/fpm/conf.d/99-app.ini
 
 RUN if [ -n "${PHP_VERSION}" ]; then \
-        find /etc/php/ -type d -print0 | xargs -0 chmod 750 && \
-        find /etc/php/ -type f -print0 | xargs -0 chmod 640 \
+        find /etc/php/ -type d -print0 | xargs -0 chmod 755 && \
+        find /etc/php/ -type f -print0 | xargs -0 chmod 644 \
     ; else \
         rm -rf /etc/php \
     ; fi
