@@ -138,7 +138,7 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-intl \
                            php${PHP_VERSION}-zip \
                            php${PHP_VERSION}-gd \
-                           ssmtp zip unzip && \
+                           zip unzip && \
         if [ ! "${PHP_VERSION}" =~ ^8\.\d$ ]; then \
             apt-get install -y php${PHP_VERSION}-json \
         ; fi && \
