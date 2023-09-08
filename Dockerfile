@@ -108,8 +108,8 @@ COPY ./nginx /etc/nginx
 COPY ./amplify /etc/amplify-agent
 COPY ./supervisor /etc/supervisor
 
-RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xargs -0 chmod 750 && \
-    find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type f -print0 | xargs -0 chmod 640 && \
+RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xargs -0 chmod 755 && \
+    find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type f -print0 | xargs -0 chmod 644 && \
     unlink /var/log/nginx/access.log && \
     unlink /var/log/nginx/error.log && \
     mkdir $WWW_HOME -p
@@ -173,8 +173,8 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
 #########################
 FROM php as final
 
-COPY --chmod=750 ./health.sh /health.sh
-COPY --chmod=750 ./corepoint.sh /corepoint.sh
+COPY --chmod=755 ./health.sh /health.sh
+COPY --chmod=755 ./corepoint.sh /corepoint.sh
 
 RUN mkfifo --mode 0666 /tmp/docker.log
 
