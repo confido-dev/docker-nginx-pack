@@ -1,14 +1,16 @@
+docker buildx create --name multiarch_build --use
+
 for ver in $DOCKER_ARGS; do
 
   DOCKER_VERS="${ver}"
 
-  if [ "${DOCKER_VERS}" != "core" ]; then DOCKER_VERS="php${ver}"; fi
+  echo "Building final multiarch images for ${DOCKER_VERS}:"
 
-  echo "Pushing ${DOCKER_VERS}:"
-  echo " from ${DOCKER_TEMP}:${DOCKER_VERS}"
-  echo " to ${DOCKER_BASE}:${DOCKER_VERS}"
-
-  docker image tag $DOCKER_TEMP:$DOCKER_VERS $DOCKER_BASE:$DOCKER_VERS && docker image push $DOCKER_BASE:$DOCKER_VERS
+  if [ "${DOCKER_VERS}" = "core" ]; then
+    docker buildx build --platform $DOCKER_ARCH --no-cache --tag $DOCKER_TEMP:$DOCKER_VERS --build-arg NOT_DUMMY_SSL=true --push .
+  else
+    docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_TEMP:php$DOCKER_VERS --build-arg PHP_VERSION=$DOCKER_VERS --build-arg NOT_DUMMY_SSL=true --push .
+  fi
 
 done
 
