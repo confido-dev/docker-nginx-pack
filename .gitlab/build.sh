@@ -5,9 +5,9 @@ for ver in $DOCKER_ARGS; do
   echo "Building ${DOCKER_VERS} from "${CI_COMMIT_BRANCH}""
 
   if [ "${DOCKER_VERS}" = "core" ]; then
-    docker build --no-cache --tag $DOCKER_TEMP:$DOCKER_VERS --build-arg NOT_DUMMY_SSL=false .
+    docker build --no-cache --tag $DOCKER_BASE:$DOCKER_VERS --build-arg NOT_DUMMY_SSL=false .
   else
-    docker build --tag $DOCKER_TEMP:php$DOCKER_VERS --build-arg PHP_VERSION=$DOCKER_VERS --build-arg NOT_DUMMY_SSL=false .
+    docker build --tag $DOCKER_BASE:php$DOCKER_VERS --build-arg PHP_VERSION=$DOCKER_VERS --build-arg NOT_DUMMY_SSL=false .
   fi
 
 done
