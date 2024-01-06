@@ -1,5 +1,3 @@
-docker buildx create --name multiarch_build --use
-
 for ver in $DOCKER_ARGS; do
 
   DOCKER_VERS="${ver}"

@@ -7,9 +7,11 @@ for ver in $DOCKER_ARGS; do
 
   echo "Testing ${DOCKER_VERS}"
 
+  docker load --input .compiled/$DOCKER_NAME.tar
   docker run --name $DOCKER_NAME -d $DOCKER_TEMP:$DOCKER_VERS $
 
-  sleep 6
+  echo "Waiting for container to be up and running (timeout 10 seconds)..."
+  sleep 10
 
   docker exec $DOCKER_NAME /bin/bash /health.sh
 

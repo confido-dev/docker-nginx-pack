@@ -13,7 +13,7 @@
 #########################
 ###     BASE NGINX    ###
 #########################
-FROM --platform=$BUILDPLATFORM ubuntu:jammy as base
+FROM --platform=$TARGETPLATFORM ubuntu:jammy as base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
@@ -28,18 +28,33 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GID=0 \
     UID=0""
 
+ARG TARGETPLATFORM
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" \
+    && printf ", TARGETARCH=${TARGETARCH}" \
+    && printf ", TARGETVARIANT=${TARGETVARIANT} \n" \
+    && printf "With uname -s : " && uname -s \
+    && printf "and  uname -m : " && uname -m
+
 RUN apt-get update && \
-    apt-get install -y apt-transport-https gnupg wget curl python2 && \
-    echo 'deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse' > /etc/apt/sources.list && \
-    echo 'deb http://archive.ubuntu.com/ubuntu/ jammy-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://packages.amplify.nginx.com/py3/ubuntu/ jammy amplify-agent' >> /etc/apt/sources.list && \
-    echo 'deb https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu jammy main' >> /etc/apt/sources.list && \
-    echo 'deb-src https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu jammy main' >> /etc/apt/sources.list && \
-    echo 'deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu jammy main' >> /etc/apt/sources.list && \
-    echo 'deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main' >> /etc/apt/sources.list && \
-    echo 'deb https://ppa.launchpadcontent.net/ondrej/php-qa/ubuntu jammy main ' >> /etc/apt/sources.list && \
+    apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg wget curl jq python2 && \
+    case "${TARGETPLATFORM}" in \
+      linux/amd64) MAINREPO_URL='http://archive.ubuntu.com/ubuntu';; \
+      linux/arm64) MAINREPO_URL='http://ports.ubuntu.com/ubuntu-ports';; \
+    *) exit 1 ;; esac && \
+    MAINREPO_VER=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
+    echo "deb ${MAINREPO_URL} ${MAINREPO_VER} main restricted universe multiverse" > /etc/apt/sources.list && \
+    echo "deb ${MAINREPO_URL} ${MAINREPO_VER}-updates main restricted universe multiverse" >> /etc/apt/sources.list && \
+    echo "deb ${MAINREPO_URL} ${MAINREPO_VER}-backports main restricted universe multiverse" >> /etc/apt/sources.list && \
+    echo "deb ${MAINREPO_URL} ${MAINREPO_VER}-security main restricted universe multiverse" >> /etc/apt/sources.list && \
+    echo "deb http://packages.amplify.nginx.com/py3/ubuntu/ ${MAINREPO_VER} amplify-agent" >> /etc/apt/sources.list && \
+    echo "deb https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
+    echo "deb-src https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
+    echo "deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
+    echo "deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
+    echo "deb https://ppa.launchpadcontent.net/ondrej/php-qa/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
     curl -s 'https://nginx.org/keys/nginx_signing.key' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/nginx_org.gpg --import && \
     curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4f4ea0aae5267a6c' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/ondrej_ppa.gpg --import && \
     curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/maxmind_ppa.gpg --import && \
@@ -48,7 +63,7 @@ RUN apt-get update && \
     apt-get install -y cron supervisor \
                        nginx nginx-amplify-agent \
                        libmaxminddb0 libmaxminddb-dev mmdb-bin && \
-    apt-get autoremove --purge -y && \
+    apt-get autoremove -y --purge && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
@@ -138,15 +153,13 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-intl \
                            php${PHP_VERSION}-zip \
                            php${PHP_VERSION}-gd \
+                           php${PHP_VERSION}-imagick \
+                           php${PHP_VERSION}-xdebug \
+                           php${PHP_VERSION}-redis \
+                           php${PHP_VERSION}-apcu \
                            zip unzip && \
         if [ ! "${PHP_VERSION}" =~ ^8\.\d$ ]; then \
             apt-get install -y php${PHP_VERSION}-json \
-        ; fi && \
-        if [ "${PHP_VERSION}" != "8.3" ]; then \
-            apt-get install -y php${PHP_VERSION}-imagick \
-                               php${PHP_VERSION}-xdebug \
-                               php${PHP_VERSION}-redis \
-                               php${PHP_VERSION}-apcu \
         ; fi && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && \
         mv /etc/php/${PHP_VERSION} /etc/php/current && ln -s /etc/php/current /etc/php/${PHP_VERSION} && \

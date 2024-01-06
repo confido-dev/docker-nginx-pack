@@ -1,46 +1,57 @@
-image: confido/docker-buildx
+image: confido/docker-buildx:latest
+
+services:
+  - docker:dind
+
+before_script:
+  - docker info
+
+variables:
+  DOCKER_ARGS: "core 5.6 7.0 7.1 7.2 7.3 7.4 8.0 8.1 8.2 8.3"
+  DOCKER_ARCH: "linux/amd64,linux/arm64"
+  DOCKER_TEMP: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_IID}"
+  DOCKER_BASE: "${DOCKER_ACC}/${DOCKER_PKG}"
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_TLS_CERTDIR: ""
 
 stages:
   - build
   - test
-  - push
-  - clean
+  - final
 
-variables:
-  DOCKER_ARGS: "core 5.6 7.0 7.1 7.2 7.3 7.4 8.0 8.1 8.2 8.3"
-  DOCKER_ARCH: "linux/arm/v7,linux/arm64/v8,linux/amd64"
-  DOCKER_TEMP: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_IID}"
-  DOCKER_BASE: "${DOCKER_ACC}/${DOCKER_PKG}"
-
-
-docker build:
+job_build:
   stage: build
-  only:
-    - develop
-    - master
+  before_script:
+    - mkdir .compiled
   script:
     - chmod +x ./.gitlab/build.sh && ./.gitlab/build.sh
+  artifacts:
+    name: $DOCKER_TEMP
+    expire_in: 1 hour
+    paths:
+      - .compiled/
 
-docker test:
+job_test:
   stage: test
-  only:
-    - develop
-    - master
+  needs:
+    - job: job_build
+      artifacts: true
   script:
     - chmod +x ./.gitlab/test.sh && ./.gitlab/test.sh
 
-docker push:
-  stage: push
+job_final:
+  stage: final
   only:
     - master
-  script:
+  before_script:
+    - update-binfmts --enable
+    - docker context create multibuilder
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - docker buildx create --name multibuilder --use multibuilder
+    - docker buildx inspect --bootstrap
     - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
-    - chmod +x ./.gitlab/push.sh && ./.gitlab/push.sh
-
-docker clean:
-  stage: clean
-  only:
-    - develop
-    - master
   script:
-    - chmod +x ./.gitlab/clean.sh && ./.gitlab/clean.sh
+    - chmod +x ./.gitlab/push.sh && ./.gitlab/push.sh
+  after_script:
+    - docker buildx rm
