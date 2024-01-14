@@ -7,41 +7,55 @@ before_script:
   - docker info
 
 variables:
-  DOCKER_ARGS: "core 5.6 7.0 7.1 7.2 7.3 7.4 8.0 8.1 8.2 8.3"
-  DOCKER_ARCH: "linux/amd64,linux/arm64"
-  DOCKER_TEMP: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_IID}"
-  DOCKER_BASE: "${DOCKER_ACC}/${DOCKER_PKG}"
+  DOCKER_UNIQ: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_IID}"
+  DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
   DOCKER_DRIVER: overlay2
   DOCKER_HOST: tcp://docker:2375/
   DOCKER_TLS_CERTDIR: ""
 
 stages:
-  - build
-  - test
-  - final
+  - core
+  - php
+  - release
 
-job_build:
-  stage: build
+.tpl-build:
+  stage: core
+  dependencies: []
   before_script:
-    - mkdir .compiled
+    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
   script:
-    - chmod +x ./.gitlab/build.sh && ./.gitlab/build.sh
-  artifacts:
-    name: $DOCKER_TEMP
-    expire_in: 1 hour
-    paths:
-      - .compiled/
+    # Build part
+    - echo "Building \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
+    - if [ $BUILD_VERSION = "core" ]; then docker build -t $DOCKER_UNIQ:$BUILD_VERSION --build-arg NOT_DUMMY_SSL=false .; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker build -t $DOCKER_UNIQ:$BUILD_VERSION --cache-from $DOCKER_UNIQ:core --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NOT_DUMMY_SSL=false .; fi
+    # Test part
+    - echo "Testing \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
+    - docker run --name $DOCKER_UNIQ-$BUILD_VERSION $DOCKER_UNIQ:$BUILD_VERSION >/dev/null 2>&1 &
+    - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
+    - docker exec $DOCKER_UNIQ-$BUILD_VERSION /bin/bash /health.sh
+    - DOCKER_CODE=$?
+    - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
 
-job_test:
-  stage: test
-  needs:
-    - job: job_build
-      artifacts: true
-  script:
-    - chmod +x ./.gitlab/test.sh && ./.gitlab/test.sh
+core_build:
+  extends: .tpl-build
+  stage: core
+  dependencies:
+    - core_build
+  parallel:
+    matrix:
+      - BUILD_VERSION: ['core']
 
-job_final:
-  stage: final
+php_build:
+  extends: .tpl-build
+  stage: php
+  dependencies:
+    - core_build
+  parallel:
+    matrix:
+      - BUILD_VERSION: ['php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3']
+
+final_build:
+  stage: release
   only:
     - master
   before_script:
@@ -51,7 +65,12 @@ job_final:
     - docker buildx create --name multibuilder --use multibuilder
     - docker buildx inspect --bootstrap
     - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
+    - $BUILD_VERSION=$([ -z "${BUILD_VERSION}" ] && echo "core" || echo "php$BUILD_VERSION" )
+    - DOCKER_PHP=$([ -z "${BUILD_VERSION}" ] && echo "" || echo "$BUILD_VERSION" )
+    - echo "Final multiarch images for \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
   script:
-    - chmod +x ./.gitlab/push.sh && ./.gitlab/push.sh
-  after_script:
-    - docker buildx rm
+    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSIONS --build-arg PHP_VERSION=$BUILD_VERSIONS --build-arg NOT_DUMMY_SSL=true --push .
+  parallel:
+    matrix:
+      - BUILD_TARGET: ['linux/amd64', 'linux/arm64']
+      - BUILD_VERSION: ['core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3']
