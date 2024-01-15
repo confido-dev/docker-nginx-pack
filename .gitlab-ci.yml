@@ -65,11 +65,10 @@ final_build:
     - docker buildx create --name multibuilder --use multibuilder
     - docker buildx inspect --bootstrap
     - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
-    - $BUILD_VERSION=$([ -z "${BUILD_VERSION}" ] && echo "core" || echo "php$BUILD_VERSION" )
-    - DOCKER_PHP=$([ -z "${BUILD_VERSION}" ] && echo "" || echo "$BUILD_VERSION" )
+    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
     - echo "Final multiarch images for \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
   script:
-    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSIONS --build-arg PHP_VERSION=$BUILD_VERSIONS --build-arg NOT_DUMMY_SSL=true --push .
+    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSIONS --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NOT_DUMMY_SSL=true --push .
   parallel:
     matrix:
       - BUILD_TARGET: ['linux/amd64', 'linux/arm64']
