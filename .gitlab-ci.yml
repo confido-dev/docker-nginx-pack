@@ -9,6 +9,7 @@ before_script:
 variables:
   DOCKER_UNIQ: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_IID}"
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
+  DOCKER_ARCH: "linux/amd64,linux/arm64"
   DOCKER_DRIVER: overlay2
   DOCKER_HOST: tcp://docker:2375/
   DOCKER_TLS_CERTDIR: ""
@@ -68,8 +69,7 @@ final_build:
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
     - echo "Final multiarch images for \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
   script:
-    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSIONS --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NOT_DUMMY_SSL=true --push .
+    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NOT_DUMMY_SSL=true --push .
   parallel:
     matrix:
-      - BUILD_TARGET: ['linux/amd64', 'linux/arm64']
       - BUILD_VERSION: ['core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3']
