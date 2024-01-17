@@ -15,20 +15,19 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 stages:
-  - core
-  - php
+  - core_test
+  - php_test
+  - prepare
   - release
 
 .tpl-build:
-  stage: core
-  dependencies: []
   before_script:
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
   script:
     # Build part
     - echo "Building \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
-    - if [ $BUILD_VERSION = "core" ]; then docker build -t $DOCKER_UNIQ:$BUILD_VERSION --build-arg NOT_DUMMY_SSL=false .; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker build -t $DOCKER_UNIQ:$BUILD_VERSION --cache-from $DOCKER_UNIQ:core --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NOT_DUMMY_SSL=false .; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker build -t $DOCKER_UNIQ:$BUILD_VERSION .; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker build -t $DOCKER_UNIQ:$BUILD_VERSION --cache-from $DOCKER_UNIQ:core --build-arg PHP_VERSION=$DOCKER_PHP .; fi
     # Test part
     - echo "Testing \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
     - docker run --name $DOCKER_UNIQ-$BUILD_VERSION $DOCKER_UNIQ:$BUILD_VERSION >/dev/null 2>&1 &
@@ -37,25 +36,34 @@ stages:
     - DOCKER_CODE=$?
     - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
 
-core_build:
+core_test:
   extends: .tpl-build
-  stage: core
-  dependencies:
-    - core_build
+  stage: core_test
   parallel:
     matrix:
       - BUILD_VERSION: ['core']
 
-php_build:
+php_test:
   extends: .tpl-build
-  stage: php
-  dependencies:
-    - core_build
+  stage: php_test
   parallel:
     matrix:
       - BUILD_VERSION: ['php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3']
 
-final_build:
+dhparam:
+  stage: prepare
+  only:
+    - master
+  script:
+    - openssl dhparam -out ./ssl/dhparam.pem 4096
+    - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
+  artifacts:
+    name: $DOCKER_UNIQ
+    expire_in: 1 hour
+    paths:
+      - ssl/
+
+buildx:
   stage: release
   only:
     - master
@@ -69,7 +77,9 @@ final_build:
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
     - echo "Final multiarch images for \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
   script:
-    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NOT_DUMMY_SSL=true --push .
+    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP ush .
+  dependencies:
+    - dhparam
   parallel:
     matrix:
       - BUILD_VERSION: ['core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3']

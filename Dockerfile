@@ -72,12 +72,7 @@ RUN apt-get update && \
 #########################
 FROM base as builder
 
-ARG NOT_DUMMY_SSL
-ENV NOT_DUMMY_SSL ${NOT_DUMMY_SSL}
-
 WORKDIR /tmp
-
-#COPY ./ngx_http_geoip2_module /tmp/ngx_http_geoip2_module
 
 RUN apt-get update && \
     apt-get install git dpkg-dev openssl -y && \
@@ -94,14 +89,6 @@ RUN apt-get update && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
 COPY ./ssl /tmp/ssl
-
-RUN if [ "${NOT_DUMMY_SSL}" = true ]; then \
-        rm /tmp/ssl/* && \
-        openssl dhparam -out /tmp/ssl/dhparam.pem 4096 && \
-        openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-                    -keyout /tmp/ssl/default.key -out /tmp/ssl/default.crt \
-                    -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null' \
-    ; fi
 
 
 #########################
