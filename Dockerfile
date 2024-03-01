@@ -64,7 +64,7 @@ RUN apt-get update && \
                        nginx nginx-amplify-agent \
                        libmaxminddb0 libmaxminddb-dev mmdb-bin && \
     apt-get autoremove -y --purge && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log
 
 
 #########################
@@ -78,7 +78,7 @@ RUN apt-get update && \
     apt-get install git dpkg-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*  && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
     if [ ! -d "ngx_http_geoip2_module" ]; then git clone https://github.com/leev/ngx_http_geoip2_module.git; fi && \
     echo './configure' > /tmp/nginx.sh && \
     nginx -V 2>&1 | grep 'configure arguments' | sed 's/.*configure arguments: //' | sed 's/ --add-dynamic-module.*$//' >> /tmp/nginx.sh && \
@@ -149,7 +149,7 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
         if [ ! "${PHP_VERSION}" =~ ^8\.\d$ ]; then \
             apt-get install -y php${PHP_VERSION}-json \
         ; fi && \
-        apt-get clean && rm -rf /var/lib/apt/lists/* && \
+        apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
         mv /etc/php/${PHP_VERSION} /etc/php/current && ln -s /etc/php/current /etc/php/${PHP_VERSION} && \
         rm -rf /etc/php/current/cli/conf.d && ln -s /etc/php/current/fpm/conf.d /etc/php/current/cli/conf.d && \
         rm -f /etc/php/current/cli/php.ini && ln -s /etc/php/current/fpm/php.ini /etc/php/current/cli/php.ini && \
