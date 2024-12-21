@@ -11,7 +11,6 @@ variables:
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
   DOCKER_ARCH: "linux/amd64,linux/arm64"
   DOCKER_DRIVER: overlay2
-  DOCKER_HOST: tcp://docker:2375/
   DOCKER_TLS_CERTDIR: ""
 
 stages:
@@ -71,7 +70,7 @@ buildx:
     - update-binfmts --enable
     - docker context create multibuilder
     - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-    - docker buildx create --name multibuilder --use multibuilder
+    - docker buildx create --name multibuilderx --use multibuilder
     - docker buildx inspect --bootstrap
     - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )

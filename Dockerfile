@@ -13,7 +13,7 @@
 #########################
 ###     BASE NGINX    ###
 #########################
-FROM --platform=$TARGETPLATFORM ubuntu:jammy as base
+FROM --platform=$TARGETPLATFORM ubuntu:noble AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
@@ -28,33 +28,25 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GID=0 \
     UID=0""
 
-ARG TARGETPLATFORM
-ARG TARGETARCH
-ARG TARGETVARIANT
+ARG TARGETPLATFORM="linux/amd64"
+ARG TARGETARCH="amd64"
+ARG TARGETVARIANT=""
 
-RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" \
-    && printf ", TARGETARCH=${TARGETARCH}" \
-    && printf ", TARGETVARIANT=${TARGETVARIANT} \n" \
-    && printf "With uname -s : " && uname -s \
-    && printf "and  uname -m : " && uname -m
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg wget curl jq python2 && \
-    case "${TARGETPLATFORM}" in \
-      linux/amd64) MAINREPO_URL='http://archive.ubuntu.com/ubuntu';; \
-      linux/arm64) MAINREPO_URL='http://ports.ubuntu.com/ubuntu-ports';; \
-    *) exit 1 ;; esac && \
-    MAINREPO_VER=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
-    echo "deb ${MAINREPO_URL} ${MAINREPO_VER} main restricted universe multiverse" > /etc/apt/sources.list && \
-    echo "deb ${MAINREPO_URL} ${MAINREPO_VER}-updates main restricted universe multiverse" >> /etc/apt/sources.list && \
-    echo "deb ${MAINREPO_URL} ${MAINREPO_VER}-backports main restricted universe multiverse" >> /etc/apt/sources.list && \
-    echo "deb ${MAINREPO_URL} ${MAINREPO_VER}-security main restricted universe multiverse" >> /etc/apt/sources.list && \
-    echo "deb http://packages.amplify.nginx.com/py3/ubuntu/ ${MAINREPO_VER} amplify-agent" >> /etc/apt/sources.list && \
-    echo "deb https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
-    echo "deb-src https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
-    echo "deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
-    echo "deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
-    echo "deb https://ppa.launchpadcontent.net/ondrej/php-qa/ubuntu ${MAINREPO_VER} main" >> /etc/apt/sources.list && \
+RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
+    printf ", TARGETARCH=${TARGETARCH}" && \
+    printf ", TARGETVARIANT=${TARGETVARIANT} \n" && \
+    printf "With uname -s : " && uname -s && \
+    printf "and  uname -m : " && uname -m && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg wget curl jq python3 && \
+    REPO_CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
+    printf "Current repo version is ${REPO_CODENAME}" && \
+    echo "deb http://packages.amplify.nginx.com/py3/ubuntu/ jammy amplify-agent" >> /etc/apt/sources.list && \
+    echo "deb https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
+    echo "deb-src https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
+    echo "deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
+    echo "deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
+    echo "deb https://ppa.launchpadcontent.net/ondrej/php-qa/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
     curl -s 'https://nginx.org/keys/nginx_signing.key' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/nginx_org.gpg --import && \
     curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4f4ea0aae5267a6c' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/ondrej_ppa.gpg --import && \
     curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/maxmind_ppa.gpg --import && \
@@ -70,7 +62,7 @@ RUN apt-get update && \
 #########################
 ###      BUILDER      ###
 #########################
-FROM base as builder
+FROM base AS builder
 
 WORKDIR /tmp
 
@@ -78,7 +70,7 @@ RUN apt-get update && \
     apt-get install git dpkg-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*  && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
     if [ ! -d "ngx_http_geoip2_module" ]; then git clone https://github.com/leev/ngx_http_geoip2_module.git; fi && \
     echo './configure' > /tmp/nginx.sh && \
     nginx -V 2>&1 | grep 'configure arguments' | sed 's/.*configure arguments: //' | sed 's/ --add-dynamic-module.*$//' >> /tmp/nginx.sh && \
@@ -94,7 +86,7 @@ COPY ./ssl /tmp/ssl
 #########################
 ###     COMPOSING     ###
 #########################
-FROM base as core
+FROM base AS core
 
 COPY --from=builder /tmp/ssl /etc/nginx/ssl
 COPY --from=builder --chmod=644 /tmp/ngx_http_geoip2_module.so /usr/lib/nginx/modules/ngx_http_geoip2_module.so
@@ -121,10 +113,10 @@ RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xarg
 #########################
 ###       PHPING      ###
 #########################
-FROM core as php
+FROM core AS php
 
 ARG PHP_VERSION
-ENV PHP_VERSION ${PHP_VERSION}
+ENV PHP_VERSION=${PHP_VERSION}
 
 RUN if [ -n "${PHP_VERSION}" ]; then \
         apt-get update && \
@@ -172,7 +164,7 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
 #########################
 ###    HAPPY ENDING   ###
 #########################
-FROM php as final
+FROM php AS final
 
 COPY --chmod=755 ./health.sh /health.sh
 COPY --chmod=755 ./corepoint.sh /corepoint.sh
