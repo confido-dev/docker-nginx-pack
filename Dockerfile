@@ -13,7 +13,7 @@
 #########################
 ###     BASE NGINX    ###
 #########################
-FROM --platform=$TARGETPLATFORM ubuntu:noble AS base
+FROM ubuntu:noble AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
@@ -28,9 +28,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GID=0 \
     UID=0""
 
-ARG TARGETPLATFORM
-ARG TARGETARCH
-ARG TARGETVARIANT
+ARG TARGETPLATFORM="linux/amd64"
+ARG TARGETARCH="amd64"
+ARG TARGETVARIANT=""
 
 RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
     printf ", TARGETARCH=${TARGETARCH}" && \
@@ -115,7 +115,7 @@ RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xarg
 #########################
 FROM core AS php
 
-ARG PHP_VERSION
+ARG PHP_VERSION=""
 ENV PHP_VERSION=${PHP_VERSION}
 
 RUN if [ -n "${PHP_VERSION}" ]; then \

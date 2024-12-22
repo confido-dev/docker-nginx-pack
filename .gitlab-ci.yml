@@ -47,7 +47,7 @@ php_test:
   stage: php_test
   parallel:
     matrix:
-      - BUILD_VERSION: ['php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3']
+      - BUILD_VERSION: ['php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4']
 
 dhparam:
   stage: prepare
@@ -81,4 +81,4 @@ buildx:
     - dhparam
   parallel:
     matrix:
-      - BUILD_VERSION: ['core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3']
+      - BUILD_VERSION: ['core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4']
