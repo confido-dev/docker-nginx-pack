@@ -26,7 +26,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     NGINX_REALIP="" \
     WWW_HOME="/www" \
     GID=0 \
-    UID=0""
+    UID=0
 
 ARG TARGETPLATFORM="linux/amd64"
 ARG TARGETARCH="amd64"
