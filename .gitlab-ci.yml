@@ -4,7 +4,6 @@ services:
   - docker:dind
 
 before_script:
-  - sleep 30
   - docker info
 
 variables:
