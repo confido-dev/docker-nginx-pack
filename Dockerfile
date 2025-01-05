@@ -52,7 +52,8 @@ RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
     curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/maxmind_ppa.gpg --import && \
     chmod 644 /etc/apt/trusted.gpg.d/* && \
     apt-get update && \
-    apt-get install -y cron supervisor \
+    apt-get install -y git nano \
+                       cron supervisor \
                        nginx nginx-amplify-agent \
                        libmaxminddb0 libmaxminddb-dev mmdb-bin && \
     apt-get autoremove -y --purge && \
