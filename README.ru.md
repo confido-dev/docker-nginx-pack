@@ -49,12 +49,13 @@ AMPLIFY_HINT=""
 Параметр **AMPLIFY_UUID** не являются обязательными, при его отсутствии Amplify-агент сгенерирует его самостоятельно.
 
 ##### GeoIP-базы от Maxmind 
-Контейнер поставляется со скомпилированным модулем NGINX для поддержки `GeoIP2` баз от MaxMind, модуль включается автоматически при нахождении внутри контейнера файла по необходимому пути:
+Контейнер поставляется со скомпилированным модулем NGINX для поддержки `GeoIP2` баз от MaxMind, модуль включается автоматически при нахождении внутри контейнера одного или нескольких файлов по необходимому пути:
 ````
-/etc/nginx/data/geo2.mmdb
+/etc/nginx/data/geoip2_city.mmdb
+/etc/nginx/data/geoip2_isp.mmdb
 ````
 
-Базы GeoIP2 от MaxMind дают доступ к дополнителями заголовкам:
+Базы GeoIP2 от MaxMind дают доступ к дополнительным заголовкам:
 ````
 HTTP_GEOIP_LONGITUDE
 HTTP_GEOIP_LATITUDE
@@ -67,6 +68,13 @@ HTTP_GEOIP_COUNTRY_NAME
 HTTP_GEOIP_COUNTRY_CODE
 HTTP_GEOIP_CONTINENT_NAME
 HTTP_GEOIP_CONTINENT_CODE
+````
+и
+````
+HTTP_GEOIP_ISP
+HTTP_GEOIP_ORGANIZATION
+HTTP_GEOIP_AUTONOMOUS_SYSTEM_NUMBER
+HTTP_GEOIP_AUTONOMOUS_SYSTEM_ORGANIZATION
 ````
 
 ##### Настройка пользователя

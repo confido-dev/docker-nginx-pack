@@ -83,12 +83,22 @@ if [ -n "${NGINX_REALIP}" ]; then
     done
     cat /etc/nginx/conf.d/sources/realip.conf >> /etc/nginx/conf.d/realip.conf
 fi
-# MaxMind GeoIP
-if [ -f "/etc/nginx/data/geo2.mmdb" ]; then
-    echo " ---> Enabling MaxMind GeoIP module"
-    cat /etc/nginx/conf.d/sources/geoip.conf >> /etc/nginx/conf.d/geoip.conf
-    cat /etc/nginx/fastcgi.d/sources/geoip.conf >> /etc/nginx/fastcgi.d/geoip.conf
-    cat /etc/nginx/conf.d/sources/proxy-headers-geoip.conf >> /etc/nginx/conf.d/proxy-headers.conf
+# MaxMind GeoIP2 City
+if [ -f "/etc/nginx/data/geoip2_city.mmdb" ]; then
+    echo " ---> Enabling MaxMind GeoIP City module"
+    cat /etc/nginx/conf.d/sources/geoip-city.conf >> /etc/nginx/conf.d/geoip.conf
+    cat /etc/nginx/fastcgi.d/sources/geoip-city.conf >> /etc/nginx/fastcgi.d/geoip.conf
+    cat /etc/nginx/conf.d/sources/proxy-headers-geoip-city.conf >> /etc/nginx/conf.d/proxy-headers.conf
+fi
+# MaxMind GeoIP2 ISP
+if [ -f "/etc/nginx/data/geoip2_isp.mmdb" ]; then
+    echo " ---> Enabling MaxMind GeoIP ISP module"
+    cat /etc/nginx/conf.d/sources/geoip-isp.conf >> /etc/nginx/conf.d/geoip.conf
+    cat /etc/nginx/fastcgi.d/sources/geoip-isp.conf >> /etc/nginx/fastcgi.d/geoip.conf
+    cat /etc/nginx/conf.d/sources/proxy-headers-geoip-isp.conf >> /etc/nginx/conf.d/proxy-headers.conf
+fi
+# MaxMind GeoIP2
+if [ -f "/etc/nginx/data/geoip2_isp.mmdb" ] || [ -f "/etc/nginx/data/geoip2_city.mmdb" ]; then
     ln -sf /usr/share/nginx/modules-available/mod-http-geoip2.conf /etc/nginx/modules-enabled/50-mod-http-geoip2.conf
 fi
 # XDebug
