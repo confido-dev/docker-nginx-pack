@@ -40,10 +40,10 @@ RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
     apt-get update && \
     apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg wget curl jq python3 && \
     REPO_CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
-    printf "Current repo version is ${REPO_CODENAME}" && \
-    echo "deb http://packages.amplify.nginx.com/py3/ubuntu/ jammy amplify-agent" >> /etc/apt/sources.list && \
-    echo "deb https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
-    echo "deb-src https://ppa.launchpadcontent.net/ondrej/nginx-mainline/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
+    printf "Current repo version is ${REPO_CODENAME}"  && \
+    echo "deb http://packages.amplify.nginx.com/py3/ubuntu/ ${REPO_CODENAME} amplify-agent" >> /etc/apt/sources.list && \
+    echo "deb https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
+    echo "deb-src https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
     echo "deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
     echo "deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
     echo "deb https://ppa.launchpadcontent.net/ondrej/php-qa/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
