@@ -125,6 +125,7 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-common \
                            php${PHP_VERSION}-fpm \
                            php${PHP_VERSION}-cli \
+                           php${PHP_VERSION}-pcntl \
                            php${PHP_VERSION}-xml \
                            php${PHP_VERSION}-curl \
                            php${PHP_VERSION}-mysqli \
