@@ -46,7 +46,7 @@ stages:
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
     - echo "Final multiarch images for \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
   script:
-    - docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP . --push .
+    - docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP --push .
   dependencies:
     - dhparam
 
