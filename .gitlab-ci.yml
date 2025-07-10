@@ -1,4 +1,4 @@
-image: confido/buildx-qemu:latest
+image: confido/docker-buildx:latest
 
 services:
   - docker:dind
@@ -14,58 +14,45 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 stages:
-  - test_core
-  - test_php
+  - core_test
+  - php_test
   - prepare
   - release
 
-.tpl-test:
+.tpl-build:
   before_script:
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
   script:
-    - echo "Building \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-OFF})"
-    - if [ $BUILD_VERSION = "core" ]; then docker build --no-cache -t $DOCKER_UNIQ:$BUILD_VERSION .; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker build --cache-from $DOCKER_UNIQ:core -t $DOCKER_UNIQ:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP .; fi
-    - echo "Testing \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-OFF})"
+    # Build part
+    - echo "Building \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
+    - if [ $BUILD_VERSION = "core" ]; then docker build -t $DOCKER_UNIQ:$BUILD_VERSION .; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker build -t $DOCKER_UNIQ:$BUILD_VERSION --cache-from $DOCKER_UNIQ:core --build-arg PHP_VERSION=$DOCKER_PHP .; fi
+    # Test part
+    - echo "Testing \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
     - docker run --name $DOCKER_UNIQ-$BUILD_VERSION $DOCKER_UNIQ:$BUILD_VERSION >/dev/null 2>&1 &
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
     - docker exec $DOCKER_UNIQ-$BUILD_VERSION /bin/bash /health.sh
     - DOCKER_CODE=$?
     - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
 
-.tpl-buildx:
-  before_script:
-    - update-binfmts --enable
-    - docker context create multibuilder
-    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-    - docker buildx create --name multibuilderx --use multibuilder
-    - docker buildx inspect --bootstrap
-    - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
-    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
-    - echo "Final multiarch images for \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-OFF})"
-  script:
-    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP --push .
-  dependencies:
-    - dhparam
-
-test_core:
-  stage: test_core
-  extends: .tpl-test
+core_test:
+  extends: .tpl-build
+  stage: core_test
   parallel:
     matrix:
       - BUILD_VERSION: ['core']
 
-test_php:
-  stage: test_php
-  extends: .tpl-test
+php_test:
+  extends: .tpl-build
+  stage: php_test
   parallel:
     matrix:
       - BUILD_VERSION: ['php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4']
 
 dhparam:
   stage: prepare
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master"
+  only:
+    - master
   script:
     - openssl dhparam -out ./ssl/dhparam.pem 4096
     - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
@@ -77,9 +64,21 @@ dhparam:
 
 buildx:
   stage: release
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master"
-  extends: .tpl-buildx
+  only:
+    - master
+  before_script:
+    - update-binfmts --enable
+    - docker context create multibuilder
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - docker buildx create --name multibuilderx --use multibuilder
+    - docker buildx inspect --bootstrap
+    - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
+    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
+    - echo "Final multiarch images for \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
+  script:
+    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP --push .
+  dependencies:
+    - dhparam
   parallel:
     matrix:
       - BUILD_VERSION: ['core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4']
