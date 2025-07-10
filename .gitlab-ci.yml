@@ -9,17 +9,17 @@ before_script:
 variables:
   DOCKER_UNIQ: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_IID}"
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
-  DOCKER_ARCH: "linux/amd64,linux/arm64"
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
 
 stages:
-  - core_test
-  - php_test
+  - test_core
+  - test_php
   - prepare
-  - release
+  - build_core
+  - build_php
 
-.tpl-build:
+.tpl-test:
   before_script:
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
   script:
@@ -35,16 +35,31 @@ stages:
     - DOCKER_CODE=$?
     - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
 
-core_test:
-  extends: .tpl-build
-  stage: core_test
+.tpl-build:
+  before_script:
+    - update-binfmts --enable
+    - docker context create multibuilder
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - docker buildx create --name multibuilderx --use multibuilder
+    - docker buildx inspect --bootstrap
+    - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
+    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
+    - echo "Final multiarch images for \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
+  script:
+    - docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP . --push .
+  dependencies:
+    - dhparam
+
+test_core:
+  extends: .tpl-test
+  stage: test_core
   parallel:
     matrix:
       - BUILD_VERSION: ['core']
 
-php_test:
-  extends: .tpl-build
-  stage: php_test
+test_php:
+  extends: .tpl-test
+  stage: test_php
   parallel:
     matrix:
       - BUILD_VERSION: ['php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4']
@@ -62,23 +77,22 @@ dhparam:
     paths:
       - ssl/
 
-buildx:
-  stage: release
+buildx_core:
+  extends: .tpl-build
+  stage: build_core
   only:
     - master
-  before_script:
-    - update-binfmts --enable
-    - docker context create multibuilder
-    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-    - docker buildx create --name multibuilderx --use multibuilder
-    - docker buildx inspect --bootstrap
-    - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
-    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "" )
-    - echo "Final multiarch images for \"$BUILD_VERSION\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-null})"
-  script:
-    - docker buildx build --platform $DOCKER_ARCH --tag $DOCKER_NAME:$BUILD_VERSION --build-arg PHP_VERSION=$DOCKER_PHP --push .
-  dependencies:
-    - dhparam
   parallel:
     matrix:
-      - BUILD_VERSION: ['core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4']
+      - BUILD_ARCH: [ 'linux/amd64', 'linux/arm64' ]
+        BUILD_VERSION: ['core']
+
+buildx_php:
+  extends: .tpl-build
+  stage: build_php
+  only:
+    - master
+  parallel:
+    matrix:
+      - BUILD_ARCH: ['linux/amd64', 'linux/arm64']
+        BUILD_VERSION: ['php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4']
