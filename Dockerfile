@@ -32,6 +32,11 @@ ARG TARGETPLATFORM="linux/amd64"
 ARG TARGETARCH="amd64"
 ARG TARGETVARIANT=""
 
+ARG NPM_PACKAGE="false"
+ENV NPM_PACKAGE=${NPM_PACKAGE}
+
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
 RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
     printf ", TARGETARCH=${TARGETARCH}" && \
     printf ", TARGETVARIANT=${TARGETVARIANT} \n" && \
@@ -56,6 +61,9 @@ RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
                        cron supervisor \
                        nginx nginx-amplify-agent \
                        libmaxminddb0 libmaxminddb-dev mmdb-bin && \
+    if [ "${NPM_PACKAGE}" = "true" ]; then \
+        apt-get install -y nodejs npm \
+    ; fi && \
     apt-get autoremove -y --purge && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log
 
@@ -139,7 +147,7 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-xdebug \
                            php${PHP_VERSION}-redis \
                            php${PHP_VERSION}-apcu && \
-        if [ ! "${PHP_VERSION}" =~ ^8\.\d$ ]; then \
+        if [[ ! "${PHP_VERSION}" =~ ^8\.[0-9]$ ]]; then \
             apt-get install -y php${PHP_VERSION}-json \
         ; fi && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
