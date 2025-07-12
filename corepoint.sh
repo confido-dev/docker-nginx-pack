@@ -158,7 +158,6 @@ stop(){
   echo " :: EXITING"
   kill -s SIGTERM $(cat /run/supervisord.pid)
   wait $(cat /run/supervisord.pid)
-  cp /root/.ssh /var/www/_docker/_ssh -RT
   exit 0
 }
 
