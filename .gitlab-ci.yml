@@ -20,6 +20,12 @@ stages:
   - build_core
   - build_php
 
+default:
+  tags:
+    - docker
+    - linux
+    - arch-amd64
+
 .tpl-test:
   before_script:
     # Args
