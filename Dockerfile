@@ -41,7 +41,7 @@ RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
     printf "With uname -s : " && uname -s && \
     printf "and  uname -m : " && uname -m && \
     apt-get update && \
-    apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg wget curl jq python3 && \
+    apt-get install -y --no-install-recommends apt-utils apt-transport-https ca-certificates gnupg wget curl jq python3 && \
     REPO_CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
     printf "Current repo version is ${REPO_CODENAME}" && \
     echo "deb http://packages.amplify.nginx.com/py3/ubuntu/ ${REPO_CODENAME} amplify-agent" >> /etc/apt/sources.list && \
