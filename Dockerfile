@@ -24,7 +24,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     AMPLIFY_TAG="" \
     AMPLIFY_HINT="default" \
     NGINX_REALIP="" \
-    WWW_HOME="/www" \
+    WWW_HOME="/var/www" \
     GID=0 \
     UID=0
 
@@ -35,17 +35,15 @@ ARG TARGETVARIANT=""
 ARG NPM_PACKAGE="false"
 ENV NPM_PACKAGE=${NPM_PACKAGE}
 
-SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
-
 RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
     printf ", TARGETARCH=${TARGETARCH}" && \
     printf ", TARGETVARIANT=${TARGETVARIANT} \n" && \
     printf "With uname -s : " && uname -s && \
     printf "and  uname -m : " && uname -m && \
     apt-get update && \
-    apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg wget curl jq python3 zip unzip && \
+    apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg wget curl jq python3 && \
     REPO_CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
-    printf "Current repo version is ${REPO_CODENAME}"  && \
+    printf "Current repo version is ${REPO_CODENAME}" && \
     echo "deb http://packages.amplify.nginx.com/py3/ubuntu/ ${REPO_CODENAME} amplify-agent" >> /etc/apt/sources.list && \
     echo "deb https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
     echo "deb-src https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
@@ -86,7 +84,7 @@ RUN apt-get update && \
     echo '--add-dynamic-module=../ngx_http_geoip2_module' >> /tmp/nginx.sh && \
     sed -i ':a;N;$!ba;s/\n/ /g' /tmp/nginx.sh && \
     chmod +x /tmp/nginx.sh && \
-    cd nginx-* && /tmp/nginx.sh && make modules && \
+    cd nginx-* && /tmp/nginx.sh && make -j1 modules && \
     cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
 
 COPY ./ssl /tmp/ssl
@@ -136,7 +134,6 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-xml \
                            php${PHP_VERSION}-curl \
                            php${PHP_VERSION}-mysqli \
-                           php${PHP_VERSION}-pgsql \
                            php${PHP_VERSION}-mbstring \
                            php${PHP_VERSION}-bcmath \
                            php${PHP_VERSION}-opcache \
@@ -146,8 +143,9 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-imagick \
                            php${PHP_VERSION}-xdebug \
                            php${PHP_VERSION}-redis \
-                           php${PHP_VERSION}-apcu && \
-        if [[ ! "${PHP_VERSION}" =~ ^8\.[0-9]$ ]]; then \
+                           php${PHP_VERSION}-apcu \
+                           zip unzip && \
+        if [ ! "${PHP_VERSION}" =~ ^8\.\d$ ]; then \
             apt-get install -y php${PHP_VERSION}-json \
         ; fi && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \

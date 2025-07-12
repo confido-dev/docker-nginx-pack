@@ -2,7 +2,7 @@ server {
     listen 80 default_server;
     listen [::]:80 default_server;
     server_name _;
-    root /www;
+    root /var/www;
     include conf.d/drop.conf;
     index index.html index.php;
     location / {
@@ -18,7 +18,7 @@ server {
     listen 443 ssl default_server;
     listen [::]:443 ssl default_server;
     server_name _;
-    root /www;
+    root /var/www;
     include conf.d/drop.conf;
     include conf.d/ssl-dummy.conf;
     index index.html index.php;
