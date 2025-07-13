@@ -60,10 +60,21 @@ default:
     # Init
     - echo "Building $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
     - echo "Runner id is $CI_RUNNER_ID (arch is $CI_RUNNER_EXECUTABLE_ARCH)"
+    # Registry Local
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   script:
     # Build part
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg NPM_PACKAGE=$BUILD_NPM .; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM .; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build \
+        --no-cache \
+        --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache,mode=max \
+        --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM \
+        --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . \
+      ; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build \
+        --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache \        
+        --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM \
+        --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . \
+      ; fi
     # Cleaning
     - docker buildx rm "builder-$CI_JOB_ID"
     - docker context rm "context-$CI_JOB_ID"
@@ -72,7 +83,7 @@ default:
   extends:
     - .tpl-stage-build
   script:
-    # Registry
+    # Registry DockerHub
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
     # Build part
     - if [ $BUILD_VERSION = "core" ]; then docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg NPM_PACKAGE=$BUILD_NPM --push .; fi
