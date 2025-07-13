@@ -26,11 +26,6 @@ default:
     - arch-amd64
 
 .tpl-stage-test:
-  rules:
-    - if: '$CI_RUNNER_EXECUTABLE_ARCH != $BUILD_ARCH'
-      when: never
-#    - if: '$BUILD_NPM == "true" && $BUILD_VERSION != "core"'
-#      when: never
   before_script:
     # Vars
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "")
@@ -101,21 +96,30 @@ default:
         BUILD_NPM: [ 'true', 'false' ]
 
 test_core:
+  stage: test_core
+  rules:
+    - if: '$CI_RUNNER_EXECUTABLE_ARCH != $BUILD_ARCH'
+      when: never
   extends:
     - .tpl-stage-test
     - .tpl-matrix-core
-  stage: test_core
 
 test_php:
+  stage: test_php
+  rules:
+    - if: '$CI_RUNNER_EXECUTABLE_ARCH != $BUILD_ARCH'
+      when: never
+    - if: '$BUILD_NPM == "true"'
+      when: never
   extends:
     - .tpl-stage-test
     - .tpl-matrix-php
-  stage: test_php
 
 dummy-ssl:
   stage: prepare
-  only:
-    - master
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success
   script:
     - openssl dhparam -out ./ssl/dhparam.pem 4096
     - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
@@ -126,33 +130,37 @@ dummy-ssl:
       - ssl/
 
 build_core:
+  stage: build_core
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      when: on_success
   extends:
     - .tpl-stage-build
     - .tpl-matrix-core
-  stage: build_core
-  only:
-    - dev
 
 release_core:
+  stage: build_core
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success
   extends:
     - .tpl-stage-release
     - .tpl-matrix-core
-  stage: build_core
-  only:
-    - master
 
 build_php:
+  stage: build_php
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      when: on_success
   extends:
     - .tpl-stage-build
     - .tpl-matrix-php
-  stage: build_php
-  only:
-    - dev
 
 release_php:
+  stage: build_php
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success
   extends:
     - .tpl-stage-release
     - .tpl-matrix-php
-  stage: build_php
-  only:
-    - master
