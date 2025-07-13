@@ -29,7 +29,7 @@ default:
   rules:
 #    - if: '$CI_RUNNER_EXECUTABLE_ARCH != $BUILD_ARCH'
 #      when: never
-    - if: '$BUILD_NPM == "true" && $BUILD_VERSION != "core"'
+    - if: '$BUILD_NPM = "true" && $BUILD_VERSION != "core"'
       when: never
   before_script:
     # Vars
