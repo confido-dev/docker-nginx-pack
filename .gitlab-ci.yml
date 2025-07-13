@@ -31,8 +31,11 @@ default:
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "")
     - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     # Init
-    - echo "Testing $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
-    - echo "Runner id is $CI_RUNNER_ID (arch is $CI_RUNNER_EXECUTABLE_ARCH)"
+    - echo "Testing $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
+      && echo " - Container PHP is ${DOCKER_PHP:-false}" \
+      && echo " - Container NPM is $BUILD_NPM" \
+      && echo " - Runner ID is $CI_RUNNER_ID" \ 
+      && echo " - Runner Arch is $CI_RUNNER_EXECUTABLE_ARCH"
     - if [ "$CI_RUNNER_EXECUTABLE_ARCH" != "$BUILD_ARCH" ]; then echo "Skipping..."; exit 0; fi
   script:
     # Build
@@ -58,8 +61,11 @@ default:
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     - docker buildx inspect --bootstrap
     # Init
-    - echo "Building $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
-    - echo "Runner id is $CI_RUNNER_ID (arch is $CI_RUNNER_EXECUTABLE_ARCH)"
+    - echo "Building $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
+      && echo " - Container PHP is ${DOCKER_PHP:-false}" \
+      && echo " - Container NPM is $BUILD_NPM" \
+      && echo " - Runner ID is $CI_RUNNER_ID" \
+      && echo " - Runner Arch is $CI_RUNNER_EXECUTABLE_ARCH"
     # Registry Local
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   script:

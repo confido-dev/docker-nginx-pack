@@ -115,7 +115,7 @@ RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xarg
 
 RUN if [ "${NPM_PACKAGE}" = "true" ]; then \
         apt-get update && \
-        apt-get install -y nodejs npm \
+        apt-get install -y nodejs npm && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log \
     ; fi
 
