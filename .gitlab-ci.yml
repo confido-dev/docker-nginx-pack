@@ -104,13 +104,13 @@ default:
 test_core:
   extends:
     - .tpl-stage-test
-    - .tpl-matrix-php
+    - .tpl-matrix-core
   stage: test_core
 
 test_php:
   extends:
     - .tpl-stage-test
-    - .tpl-matrix-core
+    - .tpl-matrix-php
   stage: test_php
 
 dummy-ssl:
