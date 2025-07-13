@@ -26,11 +26,11 @@ default:
     - arch-amd64
 
 .tpl-stage-test:
-  rules:
-#    - if: '$CI_RUNNER_EXECUTABLE_ARCH != $BUILD_ARCH'
+#  rules:
+##    - if: '$CI_RUNNER_EXECUTABLE_ARCH != $BUILD_ARCH'
+##      when: never
+#    - if: '$BUILD_NPM == "true" && $BUILD_VERSION != "core"'
 #      when: never
-    - if: '$BUILD_NPM = "true" && $BUILD_VERSION != "core"'
-      when: never
   before_script:
     # Vars
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "")
