@@ -39,16 +39,8 @@ default:
     - if [ "$CI_RUNNER_EXECUTABLE_ARCH" != "$BUILD_ARCH" ]; then echo "Skipping..."; exit 0; fi
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker build \
-        --no-cache \
-        --build-arg NPM_PACKAGE=$BUILD_NPM \
-        -t $DOCKER_UNIQ:$DOCKER_TAG . \
-      ; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker build \
-        --cache-from $DOCKER_UNIQ:core \
-        --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM \
-        -t $DOCKER_UNIQ:$DOCKER_TAG . \
-      ; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker build --no-cache --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:$DOCKER_TAG .; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker build --cache-from $DOCKER_UNIQ:core --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:$DOCKER_TAG .; fi
     # Test
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
@@ -78,17 +70,8 @@ default:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   script:
     # Build part
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build \
-        --no-cache \
-        --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache,mode=max \
-        --build-arg NPM_PACKAGE=$BUILD_NPM \
-        --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . \
-      ; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build \
-        --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache \        
-        --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM \
-        --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . \
-      ; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG .; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG .; fi
     # Cleaning
     - docker buildx rm "builder-$CI_JOB_ID"
     - docker context rm "context-$CI_JOB_ID"
