@@ -100,6 +100,8 @@ test_core:
   stage: test_core
   rules:
    - if: '$CI_RUNNER_EXECUTABLE_ARCH == $BUILD_ARCH'
+     when: always
+   - when: never
   extends:
     - .tpl-stage-test
     - .tpl-matrix-core
@@ -107,8 +109,9 @@ test_core:
 test_php:
   stage: test_php
   rules:
-    - if: '$CI_RUNNER_EXECUTABLE_ARCH == $BUILD_ARCH'
-    - if: '$BUILD_NPM == "false"'
+    - if: '$CI_RUNNER_EXECUTABLE_ARCH == $BUILD_ARCH && $BUILD_NPM == "false"'
+      when: always
+    - when: never
   extends:
     - .tpl-stage-test
     - .tpl-matrix-php
