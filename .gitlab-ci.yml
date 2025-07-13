@@ -119,7 +119,6 @@ dummy-ssl:
   stage: prepare
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-      when: on_success
   script:
     - openssl dhparam -out ./ssl/dhparam.pem 4096
     - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
@@ -133,7 +132,6 @@ build_core:
   stage: build_core
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
-      when: on_success
   extends:
     - .tpl-stage-build
     - .tpl-matrix-core
@@ -142,7 +140,6 @@ release_core:
   stage: build_core
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-      when: on_success
   extends:
     - .tpl-stage-release
     - .tpl-matrix-core
@@ -151,7 +148,6 @@ build_php:
   stage: build_php
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
-      when: on_success
   extends:
     - .tpl-stage-build
     - .tpl-matrix-php
@@ -160,7 +156,6 @@ release_php:
   stage: build_php
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-      when: on_success
   extends:
     - .tpl-stage-release
     - .tpl-matrix-php
