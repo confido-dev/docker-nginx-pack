@@ -68,6 +68,7 @@ default:
       && echo " - Runner Arch is $CI_RUNNER_EXECUTABLE_ARCH"
     # Registry Local
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - echo "Local Registry for cache is $CI_REGISTRY_IMAGE"
   script:
     # Build part
     - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG .; fi
