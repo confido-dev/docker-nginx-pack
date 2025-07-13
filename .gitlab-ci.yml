@@ -40,7 +40,7 @@ default:
   script:
     # Build
     - if [ $BUILD_VERSION = "core" ]; then docker build --no-cache --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:$DOCKER_TAG .; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker build -no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:$DOCKER_TAG .; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker build --no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:$DOCKER_TAG .; fi
     # Test
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
