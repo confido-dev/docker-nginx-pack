@@ -59,9 +59,6 @@ RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
                        cron supervisor \
                        nginx nginx-amplify-agent \
                        libmaxminddb0 libmaxminddb-dev mmdb-bin && \
-    if [ "${NPM_PACKAGE}" = "true" ]; then \
-        apt-get install -y nodejs npm \
-    ; fi && \
     apt-get autoremove -y --purge && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log
 
@@ -115,6 +112,12 @@ RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xarg
     unlink /var/log/nginx/access.log && \
     unlink /var/log/nginx/error.log && \
     mkdir $WWW_HOME -p
+
+RUN if [ "${NPM_PACKAGE}" = "true" ]; then \
+        apt-get update && \
+        apt-get install -y nodejs npm \
+        apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log \
+    ; fi
 
 
 #########################
