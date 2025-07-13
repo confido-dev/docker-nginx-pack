@@ -33,6 +33,7 @@ default:
     # Init
     - echo "Testing $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
     - echo "Runner id is $CI_RUNNER_ID (arch is $CI_RUNNER_EXECUTABLE_ARCH)"
+    - if [ "$CI_RUNNER_EXECUTABLE_ARCH" != "$BUILD_ARCH" ]; then echo "Skipping..."; exit 0; fi
   script:
     # Build
     - if [ $BUILD_VERSION = "core" ]; then docker build -t $DOCKER_UNIQ:$DOCKER_TAG --no-cache --build-arg NPM_PACKAGE=$BUILD_NPM .; fi
@@ -98,10 +99,6 @@ default:
 
 test_core:
   stage: test_core
-  rules:
-   - if: '$CI_RUNNER_EXECUTABLE_ARCH == $BUILD_ARCH'
-     when: always
-   - when: never
   extends:
     - .tpl-stage-test
     - .tpl-matrix-core
@@ -109,9 +106,7 @@ test_core:
 test_php:
   stage: test_php
   rules:
-    - if: '$CI_RUNNER_EXECUTABLE_ARCH == $BUILD_ARCH && $BUILD_NPM == "false"'
-      when: always
-    - when: never
+    - if: '$BUILD_NPM == "false"'
   extends:
     - .tpl-stage-test
     - .tpl-matrix-php
