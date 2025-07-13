@@ -32,7 +32,7 @@ default:
     - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     # Init
     - echo "Testing $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
-    - echo "Runner is \$CI_RUNNER_ID, (arch is $CI_RUNNER_EXECUTABLE_ARCH)"
+    - echo "Runner id is $CI_RUNNER_ID (arch is $CI_RUNNER_EXECUTABLE_ARCH)"
   script:
     # Build
     - if [ $BUILD_VERSION = "core" ]; then docker build -t $DOCKER_UNIQ:$DOCKER_TAG --no-cache --build-arg NPM_PACKAGE=$BUILD_NPM .; fi
@@ -58,6 +58,7 @@ default:
     - docker buildx inspect --bootstrap
     # Init
     - echo "Building $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
+    - echo "Runner id is $CI_RUNNER_ID (arch is $CI_RUNNER_EXECUTABLE_ARCH)"
   script:
     # Build part
     - if [ $BUILD_VERSION = "core" ]; then docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg NPM_PACKAGE=$BUILD_NPM .; fi
@@ -98,8 +99,7 @@ default:
 test_core:
   stage: test_core
   rules:
-#    - if: '$CI_RUNNER_EXECUTABLE_ARCH != $BUILD_ARCH'
-#      when: never
+   - if: '$CI_RUNNER_EXECUTABLE_ARCH == $BUILD_ARCH'
   extends:
     - .tpl-stage-test
     - .tpl-matrix-core
@@ -107,10 +107,8 @@ test_core:
 test_php:
   stage: test_php
   rules:
-#    - if: '$CI_RUNNER_EXECUTABLE_ARCH != $BUILD_ARCH'
-#      when: never
-    - if: '$BUILD_NPM == "true"'
-      when: never
+    - if: '$CI_RUNNER_EXECUTABLE_ARCH == $BUILD_ARCH'
+    - if: '$BUILD_NPM == "false"'
   extends:
     - .tpl-stage-test
     - .tpl-matrix-php
