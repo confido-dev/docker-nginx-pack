@@ -16,7 +16,6 @@ stages:
   - test_core
   - test_php
   - prepare
-  - release
   - build_core
   - build_php
 
@@ -26,18 +25,25 @@ default:
     - linux
     - arch-amd64
 
-.tpl-test:
+.tpl-stage-test:
+  rules:
+    - if: '$CI_RUNNER_EXECUTABLE_ARCH != $BUILD_ARCH'
+      when: never
+    - if: '$BUILD_NPM == "true" && $BUILD_VERSION != "core"'
+      when: never
   before_script:
-    # Args
+    # Vars
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "")
     - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
+    # Init
+    - echo "Testing \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
+    - echo "Runner is \#$CI_RUNNER_ID, (arch is $CI_RUNNER_EXECUTABLE_ARCH)"
   script:
+    - if ($CI_RUNNER_EXECUTABLE_ARCH
     # Build
-    - echo "Building \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
     - if [ $BUILD_VERSION = "core" ]; then docker build -t $DOCKER_UNIQ:$DOCKER_TAG --no-cache --build-arg NPM_PACKAGE=$BUILD_NPM .; fi
     - if [ $BUILD_VERSION != "core" ]; then docker build -t $DOCKER_UNIQ:$DOCKER_TAG --cache-from $DOCKER_UNIQ:core --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM .; fi
     # Test
-    - echo "Testing \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
     - docker exec $DOCKER_UNIQ-$DOCKER_TAG /bin/bash /health.sh
@@ -46,48 +52,68 @@ default:
     - docker rm $DOCKER_UNIQ-$DOCKER_TAG || true
     - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
 
-.tpl-build:
+.tpl-stage-build:
   before_script:
-    # Args
+    # Vars
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "")
     - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
-    - BUILDER_NAME="builder-$CI_JOB_ID"
-    - CONTEXT_NAME="context-$CI_JOB_ID"
-  script:
     # Buildx
     - if [ ! -f /proc/sys/fs/binfmt_misc/qemu-aarch64 ]; then docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; fi
-    - docker context create "$CONTEXT_NAME"
-    - docker buildx create --name "$BUILDER_NAME" --use "$CONTEXT_NAME"
+    - docker context create "context-$CI_JOB_ID"
+    - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     - docker buildx inspect --bootstrap
+    # Init
+    - echo "Building $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
+  script:
+    # Build part
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg NPM_PACKAGE=$BUILD_NPM .; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM .; fi
+    # Cleaning
+    - docker buildx rm "builder-$CI_JOB_ID"
+    - docker context rm "context-$CI_JOB_ID"
+
+.tpl-stage-release:
+  extends:
+    - .tpl-stage-build
+  script:
     # Registry
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
     # Build part
-    - echo "Final multiarch images for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch (PHP is ${DOCKER_PHP:-false}, NPM is $BUILD_NPM)"
     - if [ $BUILD_VERSION = "core" ]; then docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg NPM_PACKAGE=$BUILD_NPM --push .; fi
     - if [ $BUILD_VERSION != "core" ]; then docker buildx build --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --push .; fi
     # Cleaning
-    - docker buildx rm "$BUILDER_NAME"
-    - docker context rm "$CONTEXT_NAME"
+    - docker buildx rm "builder-$CI_JOB_ID"
+    - docker context rm "context-$CI_JOB_ID"
   dependencies:
-    - dhparam
+    - dummy-ssl
+
+.tpl-matrix-core:
+  parallel:
+    matrix:
+      - BUILD_ARCH: [ 'linux/amd64', 'linux/arm64' ]
+        BUILD_VERSION: [ 'core' ]
+        BUILD_NPM: [ 'true', 'false' ]
+
+.tpl-matrix-php:
+  parallel:
+    matrix:
+      - BUILD_ARCH: [ 'linux/amd64', 'linux/arm64' ]
+        BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+        BUILD_NPM: [ 'true', 'false' ]
 
 test_core:
-  extends: .tpl-test
+  extends:
+    - .tpl-stage-test
+    - .tpl-matrix-php
   stage: test_core
-  parallel:
-    matrix:
-      - BUILD_VERSION: ['core']
-        BUILD_NPM: ['true', 'false']
 
 test_php:
-  extends: .tpl-test
+  extends:
+    - .tpl-stage-test
+    - .tpl-matrix-core
   stage: test_php
-  parallel:
-    matrix:
-      - BUILD_VERSION: ['php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4']
-        BUILD_NPM: ['false']
 
-dhparam:
+dummy-ssl:
   stage: prepare
   only:
     - master
@@ -100,24 +126,34 @@ dhparam:
     paths:
       - ssl/
 
-buildx_core:
-  extends: .tpl-build
+build_core:
+  extends:
+    - .tpl-stage-build
+    - .tpl-matrix-core
+  stage: build_core
+  only:
+    - dev
+
+release_core:
+  extends:
+    - .tpl-stage-release
+    - .tpl-matrix-core
   stage: build_core
   only:
     - master
-  parallel:
-    matrix:
-      - BUILD_ARCH: ['linux/amd64', 'linux/arm64']
-        BUILD_VERSION: ['core']
-        BUILD_NPM: ['true', 'false']
 
-buildx_php:
-  extends: .tpl-build
+build_php:
+  extends:
+    - .tpl-stage-build
+    - .tpl-matrix-php
+  stage: build_php
+  only:
+    - dev
+
+release_php:
+  extends:
+    - .tpl-stage-release
+    - .tpl-matrix-php
   stage: build_php
   only:
     - master
-  parallel:
-    matrix:
-      - BUILD_ARCH: ['linux/amd64', 'linux/arm64']
-        BUILD_VERSION: ['php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4']
-        BUILD_NPM: ['true', 'false']
