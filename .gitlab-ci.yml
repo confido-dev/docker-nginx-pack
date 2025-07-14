@@ -46,7 +46,7 @@ default:
   script:
     # Build
     - if [ "$CI_RUNNER_EXECUTABLE_ARCH" != "$BUILD_ARCH" ]; then echo "Skipping..."; exit 0; fi
-    - docker build --no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_CACHE .
+    - docker build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_CACHE .
     # Test
     - docker run --name $DOCKER_TEST_NAME $DOCKER_CACHE >/dev/null 2>&1 &
     - echo "docker run --name $DOCKER_TEST_NAME $DOCKER_CACHE >/dev/null 2>&1 &"
