@@ -39,7 +39,9 @@ default:
       && echo " - Container NPM is $BUILD_NPM" \
       && echo " - Runner ID is $CI_RUNNER_ID" \
       && echo " - Runner Arch is $CI_RUNNER_EXECUTABLE_ARCH"
-
+    # Registry Local
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - echo "Local Registry for cache is $CI_REGISTRY_IMAGE"
 .tpl-stage-test:
   extends:
     - .tpl-stage-before
@@ -66,9 +68,6 @@ default:
     - docker context create "context-$CI_JOB_ID"
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     - docker buildx inspect --bootstrap
-    # Registry Local
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-    - echo "Local Registry for cache is $CI_REGISTRY_IMAGE"
     # Build part
     - docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $CI_REGISTRY_IMAGE:$DOCKER_TAG . --push
     # Cleaning
