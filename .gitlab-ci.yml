@@ -44,12 +44,8 @@ default:
     - .tpl-stage-before
   script:
     # Build
-    - docker build \
-        --no-cache \
-        --build-arg PHP_VERSION=$DOCKER_PHP \
-        --build-arg NPM_PACKAGE=$BUILD_NPM \
-        -t $DOCKER_UNIQ:cache-$DOCKER_TAG-$CI_RUNNER_EXECUTABLE_ARCH \
-        .
+    - echo "docker build --no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:cache-$DOCKER_TAG-$CI_RUNNER_EXECUTABLE_ARCH ."
+    - docker build --no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:cache-$DOCKER_TAG-$CI_RUNNER_EXECUTABLE_ARCH .
     # Test
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
