@@ -125,10 +125,10 @@ RUN if [ "${NPM_PACKAGE}" = "true" ]; then \
 #########################
 FROM core AS php
 
-ARG PHP_VERSION=""
+ARG PHP_VERSION="false"
 ENV PHP_VERSION=${PHP_VERSION}
 
-RUN if [ -n "${PHP_VERSION}" ]; then \
+RUN if [ "${PHP_VERSION}" != "false"  ]; then \
         apt-get update && \
         apt-get install -y libfcgi0ldbl \
                            php${PHP_VERSION}-common \

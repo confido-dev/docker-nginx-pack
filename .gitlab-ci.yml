@@ -18,6 +18,7 @@ stages:
   - prepare
   - build_core
   - build_php
+  - release
 
 default:
   tags:
@@ -25,22 +26,29 @@ default:
     - linux
     - arch-amd64
 
-.tpl-stage-test:
+.tpl-stage-before:
   before_script:
     # Vars
-    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "")
+    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "false")
     - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     # Init
-    - echo "Testing $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
+    - echo "Building $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
       && echo " - Container PHP is ${DOCKER_PHP:-false}" \
       && echo " - Container NPM is $BUILD_NPM" \
-      && echo " - Runner ID is $CI_RUNNER_ID" \ 
+      && echo " - Runner ID is $CI_RUNNER_ID" \
       && echo " - Runner Arch is $CI_RUNNER_EXECUTABLE_ARCH"
     - if [ "$CI_RUNNER_EXECUTABLE_ARCH" != "$BUILD_ARCH" ]; then echo "Skipping..."; exit 0; fi
+
+.tpl-stage-test:
+  extends:
+    - .tpl-stage-before
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker build --no-cache --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:$DOCKER_TAG .; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker build --no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:$DOCKER_TAG .; fi
+    - docker build \
+        --no-cache \
+        --build-arg PHP_VERSION=$DOCKER_PHP \
+        --build-arg NPM_PACKAGE=$BUILD_NPM \
+        -t $DOCKER_UNIQ:cache-$DOCKER_TAG-$CI_RUNNER_EXECUTABLE_ARCH .
     # Test
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
@@ -51,46 +59,45 @@ default:
     - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
 
 .tpl-stage-build:
-  before_script:
-    # Vars
-    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "")
-    - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
+  extends:
+    - .tpl-stage-before
+  script:
     # Buildx
     - if [ ! -f /proc/sys/fs/binfmt_misc/qemu-aarch64 ]; then docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; fi
     - docker context create "context-$CI_JOB_ID"
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     - docker buildx inspect --bootstrap
-    # Init
-    - echo "Building $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
-      && echo " - Container PHP is ${DOCKER_PHP:-false}" \
-      && echo " - Container NPM is $BUILD_NPM" \
-      && echo " - Runner ID is $CI_RUNNER_ID" \
-      && echo " - Runner Arch is $CI_RUNNER_EXECUTABLE_ARCH"
     # Registry Local
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "Local Registry for cache is $CI_REGISTRY_IMAGE"
-  script:
     # Build part
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --load; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --load; fi
-    # Cleaning
-    - docker buildx rm "builder-$CI_JOB_ID"
-    - docker context rm "context-$CI_JOB_ID"
-
-.tpl-stage-release:
-  extends:
-    - .tpl-stage-build
-  script:
-    # Registry DockerHub
-    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
-    # Build part
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache,mode=max --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg NPM_PACKAGE=$BUILD_NPM --push .; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --push .; fi
+    - docker buildx build \
+        --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH \
+        --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH,mode=max \
+        --build-arg PHP_VERSION=$DOCKER_PHP \
+        --build-arg NPM_PACKAGE=$BUILD_NPM \
+        --platform $BUILD_ARCH \
+        --tag $CI_REGISTRY_IMAGE:$DOCKER_TAG . --push
     # Cleaning
     - docker buildx rm "builder-$CI_JOB_ID"
     - docker context rm "context-$CI_JOB_ID"
   dependencies:
     - dummy-ssl
+
+#.tpl-stage-release:
+#  extends:
+#    - .tpl-stage-build
+#  script:
+#    # Registry DockerHub
+#    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
+#    # Build part
+#    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache,mode=max --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg NPM_PACKAGE=$BUILD_NPM --push .; fi
+#    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --push .; fi
+#    # Cleaning
+#    - docker buildx rm "builder-$CI_JOB_ID"
+#    - docker context rm "context-$CI_JOB_ID"
+#  dependencies:
+#    - dummy-ssl
 
 .tpl-matrix-core:
   parallel:
@@ -135,32 +142,12 @@ dummy-ssl:
 
 build_core:
   stage: build_core
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
   extends:
     - .tpl-stage-build
-    - .tpl-matrix-core
-
-release_core:
-  stage: build_core
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-  extends:
-    - .tpl-stage-release
     - .tpl-matrix-core
 
 build_php:
   stage: build_php
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
   extends:
     - .tpl-stage-build
-    - .tpl-matrix-php
-
-release_php:
-  stage: build_php
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-  extends:
-    - .tpl-stage-release
     - .tpl-matrix-php
