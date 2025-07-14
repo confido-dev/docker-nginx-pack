@@ -72,14 +72,8 @@ default:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "Local Registry for cache is $CI_REGISTRY_IMAGE"
     # Build part
-    - docker buildx build \
-        --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH \
-        --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH,mode=max \
-        --build-arg PHP_VERSION=$DOCKER_PHP \
-        --build-arg NPM_PACKAGE=$BUILD_NPM \
-        --platform $BUILD_ARCH \
-        --tag $CI_REGISTRY_IMAGE:$DOCKER_TAG \
-        . --push
+    - echo "docker buildx build --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $CI_REGISTRY_IMAGE:$DOCKER_TAG . --push"
+    - docker buildx build --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache-$BUILD_ARCH,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $CI_REGISTRY_IMAGE:$DOCKER_TAG . --push
     # Cleaning
     - docker buildx rm "builder-$CI_JOB_ID"
     - docker context rm "context-$CI_JOB_ID"
