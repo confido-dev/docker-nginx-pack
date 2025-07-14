@@ -38,13 +38,13 @@ default:
       && echo " - Container NPM is $BUILD_NPM" \
       && echo " - Runner ID is $CI_RUNNER_ID" \
       && echo " - Runner Arch is $CI_RUNNER_EXECUTABLE_ARCH"
-    - if [ "$CI_RUNNER_EXECUTABLE_ARCH" != "$BUILD_ARCH" ]; then echo "Skipping..."; exit 0; fi
 
 .tpl-stage-test:
   extends:
     - .tpl-stage-before
   script:
     # Build
+    - if [ "$CI_RUNNER_EXECUTABLE_ARCH" != "$BUILD_ARCH" ]; then echo "Skipping..."; exit 0; fi
     - docker build --no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_UNIQ:$DOCKER_TAG-$ARCH_POSTFIX .
     # Test
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG-$ARCH_POSTFIX $DOCKER_UNIQ:$DOCKER_TAG-$ARCH_POSTFIX >/dev/null 2>&1 &
