@@ -148,9 +148,10 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-redis \
                            php${PHP_VERSION}-apcu \
                            zip unzip && \
-        if [ ! "${PHP_VERSION}" =~ ^8\.\d$ ]; then \
-            apt-get install -y php${PHP_VERSION}-json \
-        ; fi && \
+        case "$PHP_VERSION" in \
+            8.[0-9]) ;; \
+            *) apt-get install -y php${PHP_VERSION}-json ;; \
+        esac && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
         mv /etc/php/${PHP_VERSION} /etc/php/current && ln -s /etc/php/current /etc/php/${PHP_VERSION} && \
         rm -rf /etc/php/current/cli/conf.d && ln -s /etc/php/current/fpm/conf.d /etc/php/current/cli/conf.d && \
