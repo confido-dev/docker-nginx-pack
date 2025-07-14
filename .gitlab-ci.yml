@@ -31,9 +31,8 @@ default:
     # Vars
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "false")
     - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
-    - ARCH_POSTFIX="${CI_RUNNER_EXECUTABLE_ARCH//\//-}"
-    - DOCKER_CACHE_TAG=$CI_REGISTRY_IMAGE:buildcache-${CI_RUNNER_EXECUTABLE_ARCH//\//-}
-    - DOCKER_TEST_NAME=$DOCKER_UNIQ-$DOCKER_TAG-${CI_RUNNER_EXECUTABLE_ARCH//\//-}
+    - DOCKER_CACHE=$CI_REGISTRY_IMAGE:buildcache-${BUILD_ARCH//\//-}
+    - DOCKER_TEST_NAME=$DOCKER_UNIQ-$DOCKER_TAG-${BUILD_ARCH//\//-}
     # Init
     - echo "Building $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
       && echo " - Container PHP is ${DOCKER_PHP:-false}" \
@@ -47,10 +46,10 @@ default:
   script:
     # Build
     - if [ "$CI_RUNNER_EXECUTABLE_ARCH" != "$BUILD_ARCH" ]; then echo "Skipping..."; exit 0; fi
-    - docker build --no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_CACHE_TAG .
+    - docker build --no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_CACHE .
     # Test
-    - docker run --name $DOCKER_TEST_NAME $DOCKER_CACHE_TAG >/dev/null 2>&1 &
-    - echo "docker run --name $DOCKER_TEST_NAME $DOCKER_CACHE_TAG >/dev/null 2>&1 &"
+    - docker run --name $DOCKER_TEST_NAME $DOCKER_CACHE >/dev/null 2>&1 &
+    - echo "docker run --name $DOCKER_TEST_NAME $DOCKER_CACHE >/dev/null 2>&1 &"
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
     - docker exec $DOCKER_TEST_NAME /bin/bash /health.sh
     - DOCKER_CODE=$?
@@ -71,7 +70,7 @@ default:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "Local Registry for cache is $CI_REGISTRY_IMAGE"
     # Build part
-    - docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE_TAG --cache-to type=registry,ref=$DOCKER_CACHE_TAG,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $CI_REGISTRY_IMAGE:$DOCKER_TAG . --push
+    - docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $CI_REGISTRY_IMAGE:$DOCKER_TAG . --push
     # Cleaning
     - docker buildx rm "builder-$CI_JOB_ID"
     - docker context rm "context-$CI_JOB_ID"
