@@ -128,7 +128,7 @@ FROM core AS php
 ARG PHP_VERSION="false"
 ENV PHP_VERSION=${PHP_VERSION}
 
-RUN if [ "${PHP_VERSION}" != "false"  ]; then \
+RUN if [ "${PHP_VERSION}" != "false" ]; then \
         apt-get update && \
         apt-get install -y libfcgi0ldbl \
                            php${PHP_VERSION}-common \
@@ -164,7 +164,7 @@ RUN if [ "${PHP_VERSION}" != "false"  ]; then \
 COPY ./php-fpm/fpm /etc/php/current/fpm
 COPY ./php-fpm/php.ini /etc/php/current/fpm/conf.d/99-app.ini
 
-RUN if [ -n "${PHP_VERSION}" ]; then \
+RUN if [ "${PHP_VERSION}" != "false" ]; then \
         find /etc/php/ -type d -print0 | xargs -0 chmod 755 && \
         find /etc/php/ -type f -print0 | xargs -0 chmod 644 \
     ; else \
