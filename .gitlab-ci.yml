@@ -9,6 +9,7 @@ before_script:
 variables:
   DOCKER_UNIQ: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_IID}"
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
+  DOCKER_ARCH: "linux/amd64,linux/arm64"
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
 
@@ -31,10 +32,9 @@ default:
     # Vars
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "false")
     - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
-    - DOCKER_CACHE=$CI_REGISTRY_IMAGE:buildcache-${BUILD_ARCH//\//-}
-    - DOCKER_TEST_NAME=$DOCKER_UNIQ-$DOCKER_TAG-${BUILD_ARCH//\//-}
+    - DOCKER_CACHE=$CI_REGISTRY_IMAGE:buildcache-core$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     # Init
-    - echo "Building $BUILD_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
+    - echo "Building image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
       && echo " - Container PHP is ${DOCKER_PHP:-false}" \
       && echo " - Container NPM is $BUILD_NPM" \
       && echo " - Runner ID is $CI_RUNNER_ID" \
@@ -45,16 +45,15 @@ default:
     - .tpl-stage-before
   script:
     # Build
-    - if [ "$CI_RUNNER_EXECUTABLE_ARCH" != "$BUILD_ARCH" ]; then echo "Skipping..."; exit 0; fi
     - docker build --no-cache --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM -t $DOCKER_CACHE .
     # Test
-    - docker run --name $DOCKER_TEST_NAME $DOCKER_CACHE >/dev/null 2>&1 &
-    - echo "docker run --name $DOCKER_TEST_NAME $DOCKER_CACHE >/dev/null 2>&1 &"
+    - docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_CACHE >/dev/null 2>&1 &
+    - echo "docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_CACHE >/dev/null 2>&1 &"
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
-    - docker exec $DOCKER_TEST_NAME /bin/bash /health.sh
+    - docker exec $DOCKER_UNIQ-$DOCKER_TAG /bin/bash /health.sh
     - DOCKER_CODE=$?
-    - docker stop $DOCKER_TEST_NAME || true
-    - docker rm $DOCKER_TEST_NAME || true
+    - docker stop $DOCKER_UNIQ-$DOCKER_TAG || true
+    - docker rm $DOCKER_UNIQ-$DOCKER_TAG || true
     - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
 
 .tpl-stage-build:
@@ -66,44 +65,36 @@ default:
     - docker context create "context-$CI_JOB_ID"
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     - docker buildx inspect --bootstrap
-    # Registry Local
+    # Registry
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-    - echo "Local Registry for cache is $CI_REGISTRY_IMAGE"
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
     # Build part
-    - docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $CI_REGISTRY_IMAGE:$DOCKER_TAG . --push
+    - if [ $BUILD_VERSION = "core" ]; then \
+        docker buildx build --cache-to type=registry,ref=$DOCKER_CACHE,mode=max \
+        --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM \
+        --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push \
+      ; fi
+    - if [ $BUILD_VERSION != "core" ]; then \
+        docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE \
+        --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM \
+        --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push \
+      ; fi
     # Cleaning
     - docker buildx rm "builder-$CI_JOB_ID"
     - docker context rm "context-$CI_JOB_ID"
   dependencies:
     - dummy-ssl
 
-#.tpl-stage-release:
-#  extends:
-#    - .tpl-stage-build
-#  script:
-#    # Registry DockerHub
-#    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
-#    # Build part
-#    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:buildcache,mode=max --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg NPM_PACKAGE=$BUILD_NPM --push .; fi
-#    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:buildcache --platform $BUILD_ARCH --tag $DOCKER_NAME:$DOCKER_TAG --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --push .; fi
-#    # Cleaning
-#    - docker buildx rm "builder-$CI_JOB_ID"
-#    - docker context rm "context-$CI_JOB_ID"
-#  dependencies:
-#    - dummy-ssl
-
 .tpl-matrix-core:
   parallel:
     matrix:
-      - BUILD_ARCH: [ 'linux/amd64', 'linux/arm64' ]
-        BUILD_VERSION: [ 'core' ]
+      - BUILD_VERSION: [ 'core' ]
         BUILD_NPM: [ 'true', 'false' ]
 
 .tpl-matrix-php:
   parallel:
     matrix:
-      - BUILD_ARCH: [ 'linux/amd64', 'linux/arm64' ]
-        BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'true', 'false' ]
 
 test_core:
@@ -122,8 +113,8 @@ test_php:
 
 dummy-ssl:
   stage: prepare
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+#  rules:
+#    - if: '$CI_COMMIT_BRANCH == "master"'
   script:
     - openssl dhparam -out ./ssl/dhparam.pem 4096
     - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
@@ -135,12 +126,16 @@ dummy-ssl:
 
 build_core:
   stage: build_core
+#  rules:
+#    - if: '$CI_COMMIT_BRANCH == "master"'
   extends:
     - .tpl-stage-build
     - .tpl-matrix-core
 
 build_php:
   stage: build_php
+#  rules:
+#    - if: '$CI_COMMIT_BRANCH == "master"'
   extends:
     - .tpl-stage-build
     - .tpl-matrix-php
