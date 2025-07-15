@@ -9,8 +9,7 @@ before_script:
 variables:
   DOCKER_UNIQ: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_IID}"
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
-  DOCKER_NATIVE_ARCH: "linux/amd64"
-  DOCKER_TARGET_ARCH: "linux/amd64,linux/arm64"
+  DOCKER_ARCH: "linux/amd64,linux/arm64"
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
 
@@ -57,8 +56,8 @@ default:
     - .tpl-base
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_NATIVE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG . --load; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_NATIVE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG . --load; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG . --load; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG . --load; fi
     # Test
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &
     - echo "docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &"
@@ -74,8 +73,8 @@ default:
     - .tpl-base
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_TARGET_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_TARGET_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
   dependencies:
     - dummy-ssl
 
@@ -106,7 +105,7 @@ test_php:
 dummy-ssl:
   stage: prepare
 #  rules:
-#    - if: '$CI_COMMIT_BRANCH == "master"'
+#    - if: '$CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"'
   script:
     - openssl dhparam -out ./ssl/dhparam.pem 4096
     - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
