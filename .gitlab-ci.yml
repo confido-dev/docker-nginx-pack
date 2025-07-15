@@ -57,7 +57,7 @@ default:
     - .tpl-base
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build -no-cache --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_NATIVE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG . --load; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_NATIVE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG . --load; fi
     - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_NATIVE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG . --load; fi
     # Test
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &
