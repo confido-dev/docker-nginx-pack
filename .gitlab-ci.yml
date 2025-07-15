@@ -30,7 +30,7 @@ default:
   before_script:
     # Vars
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "false")
-    - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
+    - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")-${DOCKER_ARCH//\//-}
     - DOCKER_CACHE=$CI_REGISTRY_IMAGE:buildcache-${CI_PIPELINE_ID}-core$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     # Init
     - echo "Building image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
@@ -42,9 +42,7 @@ default:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
     # Buildx Initing
-    - ls /proc/sys/fs/binfmt_misc -lah
-    - if [ ! -f /proc/sys/fs/binfmt_misc/qemu-aarch64 ]; then docker run --rm --privileged multiarch/qemu-user-static --reset -p yes || true; fi
-    - ls /proc/sys/fs/binfmt_misc -lah
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; fi
     - docker context create "context-$CI_JOB_ID"
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     - docker buildx inspect --bootstrap
@@ -75,39 +73,35 @@ default:
     - .tpl-base
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
-  dependencies:
-    - dummy-ssl
-
-.tpl-matrix-core:
-  parallel:
-    matrix:
-      - BUILD_VERSION: [ 'core' ]
-        BUILD_NPM: [ 'true', 'false' ]
-
-.tpl-matrix-php:
-  parallel:
-    matrix:
-      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
-        BUILD_NPM: [ 'true', 'false' ]
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --load; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --load; fi
+#  dependencies:
+#    - dummy-ssl
 
 test_core:
   stage: test_core
   extends:
     - .tpl-test
-    - .tpl-matrix-core
+  parallel:
+    matrix:
+      - BUILD_VERSION: [ 'core' ]
+        BUILD_NPM: [ 'true', 'false' ]
+        DOCKER_ARCH: [ 'linux/amd64' ]
 
 test_php:
   stage: test_php
   extends:
     - .tpl-test
-    - .tpl-matrix-php
+  parallel:
+    matrix:
+      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+        BUILD_NPM: [ 'true', 'false' ]
+        DOCKER_ARCH: [ 'linux/amd64' ]
 
 dummy-ssl:
   stage: prepare
-#  rules:
-#    - if: '$CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
   script:
     - openssl dhparam -out ./ssl/dhparam.pem 4096
     - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
@@ -123,7 +117,11 @@ build_core:
 #    - if: '$CI_COMMIT_BRANCH == "master"'
   extends:
     - .tpl-build
-    - .tpl-matrix-core
+  parallel:
+    matrix:
+      - BUILD_VERSION: [ 'core' ]
+        BUILD_NPM: [ 'true', 'false' ]
+        DOCKER_ARCH: [ 'linux/amd64', 'linux/arm64' ]
 
 build_php:
   stage: build_php
@@ -131,4 +129,8 @@ build_php:
 #    - if: '$CI_COMMIT_BRANCH == "master"'
   extends:
     - .tpl-build
-    - .tpl-matrix-php
+  parallel:
+    matrix:
+      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+        BUILD_NPM: [ 'true', 'false' ]
+        DOCKER_ARCH: [ 'linux/amd64', 'linux/arm64' ]
