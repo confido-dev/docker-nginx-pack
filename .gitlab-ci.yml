@@ -75,8 +75,8 @@ default:
     - .tpl-base
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform "linux/amd64" --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform "linux/amd64" --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
   dependencies:
     - dummy-ssl
 
