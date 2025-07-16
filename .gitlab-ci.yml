@@ -18,6 +18,7 @@ stages:
   - test
   - prepare
   - build
+  - final
 
 default:
   tags:
@@ -76,7 +77,7 @@ default:
     - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
     - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
   dependencies:
-    - dummy-ssl
+    - prepare_ssl
 
 test_core:
   stage: test
@@ -144,3 +145,14 @@ build_php:
     matrix:
       - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'true', 'false' ]
+
+#final_clean:
+#  stage: final
+#  extends:
+#    - .tpl-base
+#  script:
+#    -
+#  parallel:
+#    matrix:
+#      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+#        BUILD_NPM: [ 'true', 'false' ]
