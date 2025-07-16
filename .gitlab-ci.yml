@@ -28,14 +28,18 @@ default:
 .tpl-base:
   before_script:
     # Vars
+    - BUILD_ARCH="${BUILD_ARCH:-$CI_RUNNER_EXECUTABLE_ARCH}"
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "false")
     - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
-    - DOCKER_CACHE=$CI_REGISTRY_IMAGE:buildcache-${CI_PIPELINE_ID}-core$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
+    - DOCKER_CACHE=$CI_REGISTRY_IMAGE:${CI_PIPELINE_ID}-core$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")-cache
+    - DOCKER_LOCAL=$CI_REGISTRY_IMAGE:$CI_PIPELINE_ID-$DOCKER_TAG
+    - DOCKER_ARCH=${BUILD_ARCH/\//-}
     # Init
     - echo "Building $DOCKER_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
       && echo " - Container PHP is ${DOCKER_PHP:-false}" \
       && echo " - Container NPM is $BUILD_NPM" \
       && echo " - Cache is $DOCKER_CACHE" \
+      && echo " - Local is $DOCKER_LOCAL" \
       && echo " - Runner ID is $CI_RUNNER_ID" \
       && echo " - Runner Arch is $CI_RUNNER_EXECUTABLE_ARCH"
     # Registry
@@ -55,18 +59,19 @@ default:
   extends:
     - .tpl-base
   script:
+
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG . --load; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG . --load; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH . --load; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH . --load; fi
     # Test
-    - docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &
-    - echo "docker run --name $DOCKER_UNIQ-$DOCKER_TAG $DOCKER_UNIQ:$DOCKER_TAG >/dev/null 2>&1 &"
+    - docker run --name $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH >/dev/null 2>&1 &
+    - echo "docker run --name $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH >/dev/null 2>&1 &"
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
-    - docker exec $DOCKER_UNIQ-$DOCKER_TAG /bin/bash /health.sh
+    - docker exec $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH /bin/bash /health.sh
     - DOCKER_CODE=$?
-    - docker stop $DOCKER_UNIQ-$DOCKER_TAG || true
-    - docker rm $DOCKER_UNIQ-$DOCKER_TAG || true
-    - docker rmi $DOCKER_UNIQ:$DOCKER_TAG || true
+    - docker stop $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH || true
+    - docker rm $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH || true
+    - docker rmi $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH || true
     - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
 
 .tpl-build:
@@ -74,8 +79,8 @@ default:
     - .tpl-base
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_LOCAL:$DOCKER_TAG-$DOCKER_ARCH . --push; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_LOCAL:$DOCKER_TAG-$DOCKER_ARCH . --push; fi
   dependencies:
     - prepare_ssl
 
@@ -85,7 +90,8 @@ test_core:
     - .tpl-test
   parallel:
     matrix:
-      - BUILD_VERSION: [ 'core' ]
+      - BUILD_ARCH: [ 'linux/amd64' ]
+        BUILD_VERSION: [ 'core' ]
         BUILD_NPM: [ 'true', 'false' ]
 
 test_php:
@@ -96,7 +102,8 @@ test_php:
     - job: test_core
   parallel:
     matrix:
-      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+      - BUILD_ARCH: [ 'linux/amd64' ]
+        BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'false' ]
 
 prepare_ssl:
@@ -122,7 +129,8 @@ build_core:
     - job: prepare_ssl
   parallel:
     matrix:
-      - BUILD_VERSION: [ 'core' ]
+      - BUILD_ARCH: [ 'linux/amd64', 'linux/arm64' ]
+        BUILD_VERSION: [ 'core' ]
         BUILD_NPM: [ 'true', 'false' ]
 
 build_php:
@@ -136,7 +144,8 @@ build_php:
     - job: build_core
   parallel:
     matrix:
-      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+      - BUILD_ARCH: [ 'linux/amd64', 'linux/arm64' ]
+        BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'true', 'false' ]
 
 #final_clean:
