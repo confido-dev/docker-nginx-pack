@@ -59,9 +59,6 @@ RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
                        cron supervisor \
                        nginx nginx-amplify-agent \
                        libmaxminddb0 libmaxminddb-dev mmdb-bin && \
-    if [ "${NPM_PACKAGE}" = "true" ]; then \
-        apt-get install -y nodejs npm \
-    ; fi && \
     apt-get autoremove -y --purge && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log
 
@@ -74,7 +71,7 @@ FROM base AS builder
 WORKDIR /tmp
 
 RUN apt-get update && \
-    apt-get install git dpkg-dev openssl -y && \
+    apt-get install dpkg-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
@@ -116,16 +113,22 @@ RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xarg
     unlink /var/log/nginx/error.log && \
     mkdir $WWW_HOME -p
 
+RUN if [ "${NPM_PACKAGE}" = "true" ]; then \
+        apt-get update && \
+        apt-get install -y nodejs npm && \
+        apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log \
+    ; fi
+
 
 #########################
 ###       PHPING      ###
 #########################
 FROM core AS php
 
-ARG PHP_VERSION=""
+ARG PHP_VERSION="false"
 ENV PHP_VERSION=${PHP_VERSION}
 
-RUN if [ -n "${PHP_VERSION}" ]; then \
+RUN if [ "${PHP_VERSION}" != "false" ]; then \
         apt-get update && \
         apt-get install -y libfcgi0ldbl \
                            php${PHP_VERSION}-common \
@@ -134,6 +137,8 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-xml \
                            php${PHP_VERSION}-curl \
                            php${PHP_VERSION}-mysqli \
+                           php${PHP_VERSION}-pgsql \
+                           php${PHP_VERSION}-mongodb \
                            php${PHP_VERSION}-mbstring \
                            php${PHP_VERSION}-bcmath \
                            php${PHP_VERSION}-opcache \
@@ -145,9 +150,10 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
                            php${PHP_VERSION}-redis \
                            php${PHP_VERSION}-apcu \
                            zip unzip && \
-        if [ ! "${PHP_VERSION}" =~ ^8\.\d$ ]; then \
-            apt-get install -y php${PHP_VERSION}-json \
-        ; fi && \
+        case "$PHP_VERSION" in \
+            8.[0-9]) ;; \
+            *) apt-get install -y php${PHP_VERSION}-json ;; \
+        esac && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
         mv /etc/php/${PHP_VERSION} /etc/php/current && ln -s /etc/php/current /etc/php/${PHP_VERSION} && \
         rm -rf /etc/php/current/cli/conf.d && ln -s /etc/php/current/fpm/conf.d /etc/php/current/cli/conf.d && \
@@ -160,7 +166,7 @@ RUN if [ -n "${PHP_VERSION}" ]; then \
 COPY ./php-fpm/fpm /etc/php/current/fpm
 COPY ./php-fpm/php.ini /etc/php/current/fpm/conf.d/99-app.ini
 
-RUN if [ -n "${PHP_VERSION}" ]; then \
+RUN if [ "${PHP_VERSION}" != "false" ]; then \
         find /etc/php/ -type d -print0 | xargs -0 chmod 755 && \
         find /etc/php/ -type f -print0 | xargs -0 chmod 644 \
     ; else \
