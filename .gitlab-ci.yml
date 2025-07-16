@@ -81,8 +81,8 @@ default:
     # Build
     - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_LOCAL:$DOCKER_TAG-$DOCKER_ARCH . --push; fi
     - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_LOCAL:$DOCKER_TAG-$DOCKER_ARCH . --push; fi
-  dependencies:
-    - prepare_ssl
+#  dependencies:
+#    - prepare_ssl
 
 test_core:
   stage: test
@@ -121,12 +121,12 @@ prepare_ssl:
 
 build_core:
   stage: build
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+#  rules:
+#    - if: '$CI_COMMIT_BRANCH == "master"'
   extends:
     - .tpl-build
-  needs:
-    - job: prepare_ssl
+#  needs:
+#    - job: prepare_ssl
   parallel:
     matrix:
       - BUILD_ARCH: [ 'linux/amd64', 'linux/arm64' ]
@@ -135,12 +135,12 @@ build_core:
 
 build_php:
   stage: build
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+#  rules:
+#    - if: '$CI_COMMIT_BRANCH == "master"'
   extends:
     - .tpl-build
   needs:
-    - job: prepare_ssl
+#    - job: prepare_ssl
     - job: build_core
   parallel:
     matrix:
