@@ -105,7 +105,7 @@ test_php:
       - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'true', 'false' ]
 
-dummy-ssl:
+prepare_ssl:
   stage: prepare
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
@@ -124,6 +124,8 @@ build_core:
     - if: '$CI_COMMIT_BRANCH == "master"'
   extends:
     - .tpl-build
+  needs:
+    - job: prepare_ssl
   parallel:
     matrix:
       - BUILD_VERSION: [ 'core' ]
@@ -136,6 +138,7 @@ build_php:
   extends:
     - .tpl-build
   needs:
+    - job: prepare_ssl
     - job: build_core
   parallel:
     matrix:
