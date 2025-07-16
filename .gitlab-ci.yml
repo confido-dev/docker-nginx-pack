@@ -79,8 +79,8 @@ default:
     - .tpl-base
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_LOCAL:$DOCKER_TAG-$DOCKER_ARCH . --push; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_LOCAL:$DOCKER_TAG-$DOCKER_ARCH . --push; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH . --push; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $BUILD_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH . --push; fi
 #  dependencies:
 #    - prepare_ssl
 
