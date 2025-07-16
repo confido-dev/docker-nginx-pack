@@ -17,7 +17,6 @@ stages:
   - test
   - prepare
   - build
-  - release
 
 default:
   tags:
@@ -48,8 +47,8 @@ default:
     - docker buildx inspect --bootstrap
   after_script:
     # Cleaning
-    - docker buildx rm "builder-$CI_JOB_ID"
-    - docker context rm "context-$CI_JOB_ID"
+    - docker buildx rm "builder-$CI_JOB_ID" || true
+    - docker context rm "context-$CI_JOB_ID" || true
 
 .tpl-test:
   extends:
@@ -76,6 +75,7 @@ default:
     # Build
     - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --cache-to type=registry,ref=$DOCKER_CACHE,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
     - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE --build-arg PHP_VERSION=$DOCKER_PHP --build-arg NPM_PACKAGE=$BUILD_NPM --platform $DOCKER_ARCH --tag $DOCKER_NAME:$DOCKER_TAG . --push; fi
+    - docker rmi $DOCKER_NAME:$DOCKER_TAG || true
 #  dependencies:
 #    - dummy-ssl
 
@@ -99,18 +99,18 @@ test_php:
       - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'true', 'false' ]
 
-#dummy-ssl:
-#  stage: prepare
-#  rules:
-#    - if: '$CI_COMMIT_BRANCH == "master"'
-#  script:
-#    - openssl dhparam -out ./ssl/dhparam.pem 4096
-#    - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
-#  artifacts:
-#    name: $DOCKER_UNIQ
-#    expire_in: 1 hour
-#    paths:
-#      - ssl/
+dummy-ssl:
+  stage: prepare
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+  script:
+    - openssl dhparam -out ./ssl/dhparam.pem 4096
+    - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
+  artifacts:
+    name: $DOCKER_UNIQ
+    expire_in: 1 hour
+    paths:
+      - ssl/
 
 build_core:
   stage: build
