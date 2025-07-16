@@ -88,13 +88,6 @@ test_core:
       - BUILD_VERSION: [ 'core' ]
         BUILD_NPM: [ 'true', 'false' ]
 
-initing:
-  stage: init
-  script:
-    - update-binfmts --display
-    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-    - update-binfmts --display
-
 test_php:
   stage: test
   extends:
