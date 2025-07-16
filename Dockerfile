@@ -71,7 +71,7 @@ FROM base AS builder
 WORKDIR /tmp
 
 RUN apt-get update && \
-    apt-get install git dpkg-dev openssl -y && \
+    apt-get install dpkg-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
