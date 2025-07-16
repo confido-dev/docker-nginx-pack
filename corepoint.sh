@@ -36,7 +36,7 @@ fi
 sh -c "sed -i.old -e 's~^user.*$~user $WWW_USER $WWW_GROUP;~' /etc/nginx/nginx.conf"
 rm -f /etc/nginx/nginx.conf.old
 # Fixing PHP-FPM
-if [ -n "${PHP_VERSION}" ]; then
+if [ "${PHP_VERSION}" != "false" ]; then
     sh -c "sed -i.old -e 's~^user =.*$~user = $WWW_USER~' /etc/php/current/fpm/pool.d/www.conf"
     sh -c "sed -i.old -e 's~^group =.*$~group = $WWW_GROUP~' /etc/php/current/fpm/pool.d/www.conf"
 	rm -f /etc/php/current/fpm/pool.d/www.conf.old
@@ -102,7 +102,7 @@ if [ -f "/etc/nginx/data/geoip2_isp.mmdb" ] || [ -f "/etc/nginx/data/geoip2_city
     ln -sf /usr/share/nginx/modules-available/mod-http-geoip2.conf /etc/nginx/modules-enabled/50-mod-http-geoip2.conf
 fi
 # XDebug
-if [ -n "${PHP_VERSION}" ] && [ -n "${XDEBUG_CONFIG}" ]; then
+if [ "${PHP_VERSION}" != "false" ] && [ -n "${XDEBUG_CONFIG}" ]; then
     echo " ---> Enabling XDebug module"
     ln -sf /etc/php/current/mods-available/xdebug.ini /etc/php/current/fpm/conf.d/20-xdebug.ini
 fi
@@ -113,7 +113,7 @@ fi
 #########################
 if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}" ]; then
     echo " :: SETTING AMPLIFY"
-    if [ -n "${PHP_VERSION}" ]; then FPM_ENABLED=True; else FPM_ENABLED=False; fi
+    if [ "${PHP_VERSION}" != "false" ]; then FPM_ENABLED=True; else FPM_ENABLED=False; fi
     sh -c "sed -i.old -e 's~^phpfpm =.*$~phpfpm = $FPM_ENABLED~' /etc/amplify-agent/agent.conf"
     sh -c "sed -i.old -e 's~^api_key =.*$~api_key = $AMPLIFY_KEY~' /etc/amplify-agent/agent.conf"
     sh -c "sed -i.old -e 's~^hostname =.*$~hostname = $AMPLIFY_HOST~' /etc/amplify-agent/agent.conf"
@@ -130,12 +130,12 @@ fi
 echo " :: TAGGING CONFS"
 # Cleaning
 rm -rf /etc/nginx/nginx-${AMPLIFY_HINT}.conf
-if [ -n "${PHP_VERSION}" ]; then
+if [ "${PHP_VERSION}" != "false" ]; then
     rm -rf /etc/php/current/fpm/php-fpm-${AMPLIFY_HINT}.conf
 fi
 # Tagging
 ln -s /etc/nginx/nginx.conf /etc/nginx/nginx-${AMPLIFY_HINT}.conf
-if [ -n "${PHP_VERSION}" ]; then
+if [ "${PHP_VERSION}" != "false" ]; then
     ln -s /etc/php/current/fpm/php-fpm.conf /etc/php/current/fpm/php-fpm-${AMPLIFY_HINT}.conf
 fi
 
@@ -145,7 +145,7 @@ fi
 #########################
 echo " :: TESTING NGINX"
 nginx -t
-if [ -n "${PHP_VERSION}" ]; then
+if [ "${PHP_VERSION}" != "false" ]; then
     echo " :: TESTING PHP-FPM"
     php-fpm --fpm-config /etc/php/current/fpm/php-fpm-${AMPLIFY_HINT}.conf --allow-to-run-as-root -t
 fi
@@ -192,7 +192,7 @@ echo " :: STARTING"
 cat /etc/supervisor/supervisord_core.conf > /etc/supervisor/supervisord.conf
 if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}" ]; then cat /etc/supervisor/supervisord_amplify.conf >> /etc/supervisor/supervisord.conf; fi
 if [ -f "/crontab.txt"   ]; then cat /etc/supervisor/supervisord_cron.conf >> /etc/supervisor/supervisord.conf; fi
-if [ -n "${PHP_VERSION}" ]; then cat /etc/supervisor/supervisord_php.conf >> /etc/supervisor/supervisord.conf; fi
+if [ "${PHP_VERSION}" != "false" ]; then cat /etc/supervisor/supervisord_php.conf >> /etc/supervisor/supervisord.conf; fi
 unset NGINX_REALIP PHP_VERSION
 unset GID UID FORCE_CHMOD FORCE_CHMOD_ALL
 unset AMPLIFY_HOST AMPLIFY_UUID AMPLIFY_NAME AMPLIFY_KEY AMPLIFY_TAG
