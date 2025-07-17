@@ -1,4 +1,4 @@
-image: confido/buildx-qemu:latest
+image: docker
 
 services:
   - docker:dind
@@ -42,15 +42,6 @@ default:
     # Registry
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
-#    -  if [ ! -f /proc/sys/fs/binfmt_misc/qemu-aarch64 ]; then docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; fi
-    # Buildx Initing
-    - docker context create "context-$CI_JOB_ID"
-    - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
-    - docker buildx inspect --bootstrap
-  after_script:
-    # Cleaning
-    - docker buildx rm "builder-$CI_JOB_ID" || true
-    - docker context rm "context-$CI_JOB_ID" || true
 
 .tpl-test:
   extends:
@@ -58,8 +49,8 @@ default:
   script:
 
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --no-cache --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH . --load; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=${DOCKER_PHP:-false} --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH . --load; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker build --no-cache --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH . --load; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=${DOCKER_PHP:-false} --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH . --load; fi
     # Test
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH >/dev/null 2>&1 &
     - echo "docker run --name $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH $DOCKER_UNIQ:$DOCKER_TAG-$DOCKER_ARCH >/dev/null 2>&1 &"
@@ -76,8 +67,8 @@ default:
     - .tpl-base
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH . --push; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=${DOCKER_PHP:-false} --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH . --push; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH . --push; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=${DOCKER_PHP:-false} --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH . --push; fi
 #  dependencies:
 #    - prepare_ssl
 
