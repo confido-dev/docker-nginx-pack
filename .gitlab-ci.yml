@@ -4,7 +4,7 @@ services:
   - docker:dind
 
 variables:
-  DOCKER_UNIQ: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_PIPELINE_IID}"
+  DOCKER_UNIQ: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_PIPELINE_ID}"
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
   DOCKER_ARCH: "linux/amd64,linux/arm64"
   DOCKER_DRIVER: overlay2
