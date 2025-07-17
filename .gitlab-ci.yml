@@ -69,6 +69,7 @@ default:
     - echo "docker run --name $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH $DOCKER_LOCAL-$DOCKER_ARCH"
     - docker run --name $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH $DOCKER_LOCAL-$DOCKER_ARCH # >/dev/null 2>&1 &
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
+    - echo "docker exec $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH /bin/bash /health.sh"
     - docker exec $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH /bin/bash /health.sh
     - DOCKER_CODE=$?
     - docker stop $DOCKER_UNIQ-$DOCKER_TAG-$DOCKER_ARCH || true
