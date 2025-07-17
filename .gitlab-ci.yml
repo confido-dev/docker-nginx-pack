@@ -117,7 +117,7 @@ build_arm64_core:
     - .tpl-build
     - .tpl-matrix-core
   tags:
-    - linux-amd64
+    - linux-arm64
 
 build_arm64_php:
   stage: build_arch
