@@ -23,8 +23,6 @@ default:
   tags:
     - docker
 
-.tpl-vars:
-
 .tpl-base:
   before_script:
     # Vars
