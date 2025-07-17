@@ -3,9 +3,6 @@ image: docker
 services:
   - docker:dind
 
-before_script:
-  - docker info
-
 variables:
   DOCKER_UNIQ: "build-${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}-${CI_PIPELINE_IID}"
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
@@ -29,8 +26,8 @@ default:
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "false")
     - DOCKER_TAIL=$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     - DOCKER_TAG=${BUILD_VERSION}${DOCKER_TAIL}
-    - DOCKER_CACHE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}-core${DOCKER_TAIL}-cache
-    - DOCKER_LOCAL=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}-${DOCKER_TAG}
+    - DOCKER_CACHE=${CI_REGISTRY_IMAGE}:cache-${CI_PIPELINE_ID}-core${DOCKER_TAIL}
+    - DOCKER_LOCAL=${CI_REGISTRY_IMAGE}:build-${CI_PIPELINE_ID}-${DOCKER_TAG}
     - DOCKER_ARCH=${CI_RUNNER_EXECUTABLE_ARCH/\//-}
     # Init
     - echo "Building $DOCKER_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
@@ -43,7 +40,6 @@ default:
     # Registry
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
-#    -  if [ ! -f /proc/sys/fs/binfmt_misc/qemu-aarch64 ]; then docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; fi
     # Buildx Initing
     - docker context create "context-$CI_JOB_ID"
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
@@ -77,8 +73,8 @@ default:
     - .tpl-base
   script:
     # Build
-    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH . --push; fi
-    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=${DOCKER_PHP:-false} --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH . --push; fi
+    - if [ $BUILD_VERSION = "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --cache-to type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH,mode=max --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH --progress=plain --provenance=false . --push; fi
+    - if [ $BUILD_VERSION != "core" ]; then docker buildx build --cache-from type=registry,ref=$DOCKER_CACHE-$DOCKER_ARCH --build-arg PHP_VERSION=${DOCKER_PHP:-false} --build-arg NPM_PACKAGE=$BUILD_NPM --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $DOCKER_LOCAL-$DOCKER_ARCH --progress=plain --provenance=false . --push; fi
 #  dependencies:
 #    - prepare_ssl
 
