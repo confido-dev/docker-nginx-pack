@@ -30,7 +30,7 @@ default:
     - DOCKER_TAG=$BUILD_VERSION$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     - DOCKER_CACHE=$CI_REGISTRY_IMAGE:${CI_PIPELINE_ID}-core$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")-cache
     - DOCKER_LOCAL=$CI_REGISTRY_IMAGE:$CI_PIPELINE_ID-$DOCKER_TAG
-    - DOCKER_ARCH=${$CI_RUNNER_EXECUTABLE_ARCH/\//-}
+    - DOCKER_ARCH=${CI_RUNNER_EXECUTABLE_ARCH/\//-}
     # Init
     - echo "Building $DOCKER_ARCH image for \"$DOCKER_TAG\" from \"$CI_COMMIT_BRANCH\" branch:" \
       && echo " - Container PHP is ${DOCKER_PHP:-false}" \
