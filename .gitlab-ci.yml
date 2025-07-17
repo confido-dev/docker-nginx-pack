@@ -23,14 +23,13 @@ default:
 
 .tpl-base:
   before_script:
-    # Variables
+    # Base variables
     - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "false")
     - DOCKER_TAIL=$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     - DOCKER_TAG=${BUILD_VERSION}${DOCKER_TAIL}
     - DOCKER_LOCAL=${CI_REGISTRY_IMAGE}:build-${CI_PIPELINE_ID}-${DOCKER_TAG}
     # Registry
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-    - echo "echo \"$CI_REGISTRY_PASSWORD\" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY"
 
 .tpl-matrix-core:
   parallel:
@@ -48,12 +47,13 @@ default:
   extends:
     - .tpl-base
   script:
-    # Vars
+    # Build variables
     - BUILD_CACHE=${CI_REGISTRY_IMAGE}:cache-${CI_PIPELINE_ID}-core${DOCKER_TAIL}
     - BUILD_ARCH=${CI_RUNNER_EXECUTABLE_ARCH/\//-}
     - BUILD_IMAGE=$DOCKER_LOCAL-$BUILD_ARCH
     - BUILD_NAME=$DOCKER_UNIQ-$DOCKER_TAG-$BUILD_ARCH
     - BUILD_ARGS=$([ "$BUILD_VERSION" = "core" ] && echo "--no-cache --cache-to type=registry,ref=$BUILD_CACHE-$BUILD_ARCH,mode=max" || echo "--cache-from type=registry,ref=$BUILD_CACHE-$BUILD_ARCH")
+    # Saving for after_script
     - echo $BUILD_NAME > var_build_name
     - echo $BUILD_IMAGE > var_build_image
     # Buildx Initing
