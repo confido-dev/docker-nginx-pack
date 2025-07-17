@@ -81,7 +81,7 @@ default:
 #  dependencies:
 #    - prepare_ssl
 
-test_core_amd64:
+test_core:
   stage: test
   extends:
     - .tpl-test
@@ -92,7 +92,7 @@ test_core_amd64:
   tags:
     - linux-amd64
 
-test_php_amd64:
+test_php:
   stage: test
   extends:
     - .tpl-test
