@@ -103,6 +103,8 @@ build_core_amd64:
   extends:
     - .tpl-build
     - .tpl-matrix-core
+  needs:
+    - job: prepare_ssl
   tags:
     - linux-amd64
 
@@ -111,6 +113,8 @@ build_core_arm64:
   extends:
     - .tpl-build
     - .tpl-matrix-core
+  needs:
+    - job: prepare_ssl
   tags:
     - linux-arm64
 
@@ -120,6 +124,9 @@ build_php_amd64:
   extends:
     - .tpl-build
     - .tpl-matrix-php
+  needs:
+    - job: prepare_ssl
+    - job: build_core_amd64
   tags:
     - linux-amd64
 
@@ -129,6 +136,9 @@ build_php_arm64:
   extends:
     - .tpl-build
     - .tpl-matrix-php
+  needs:
+    - job: prepare_ssl
+    - job: build_core_arm64
   tags:
     - linux-arm64
 
@@ -145,13 +155,14 @@ release:
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
     # Composing
     - |
-      DOCKER_SOURCES=""
+      DOCKER_IMAGES=""
       for DOCKER_ARCH in $DOCKER_ARCHS; do
         BUILD_ARCH=${DOCKER_ARCH/\//-}
         docker pull $DOCKER_LOCAL-$BUILD_ARCH
-        DOCKER_SOURCES="$DOCKER_SOURCES $DOCKER_LOCAL-$BUILD_ARCH"
+        DOCKER_IMAGES="$DOCKER_IMAGES $DOCKER_LOCAL-$BUILD_ARCH"
       done
       - docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_SOURCES
+      - docker rmi $DOCKER_IMAGES || true
   tags:
     - linux-amd64
 
