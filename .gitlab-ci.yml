@@ -14,7 +14,6 @@ stages:
   - build_core
   - build_php
   - release
-#  - purge
 
 default:
   tags:
@@ -39,15 +38,13 @@ default:
 .tpl-matrix-php:
   parallel:
     matrix:
-      # - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
-      - BUILD_VERSION: [ 'php5.6' ]
+      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'false', 'true' ]
 
 .tpl-matrix-all:
   parallel:
     matrix:
-      # - BUILD_VERSION: [ 'core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
-      - BUILD_VERSION: [ 'core', 'php5.6' ]
+      - BUILD_VERSION: [ 'core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'false', 'true' ]
 
 .tpl-build:
@@ -149,6 +146,8 @@ release:
   extends:
     - .tpl-base
     - .tpl-matrix-all
+  only:
+    - master
   variables:
     # Arch list
     DOCKER_ARCHS: "linux/amd64 linux/arm64"
@@ -169,17 +168,3 @@ release:
     - docker rmi $DOCKER_IMAGES || true
   tags:
     - linux-amd64
-
-#`
-#purge:
-#  stage: purge
-#  extends:
-#    - .tpl-base
-#    - .tpl-matrix-all
-#  script:
-#    # Arch list
-#    - DOCKER_ARCH: "linux/amd64 linux/arm64"
-#    # Registry
-#    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
-#  tags:
-#    - linux-amd64`
