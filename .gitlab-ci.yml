@@ -39,13 +39,18 @@ default:
 .tpl-matrix-php:
   parallel:
     matrix:
-      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+      - BUILD_VERSION: [ 'php5.6',
+                         'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4',
+                         'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'false', 'true' ]
 
 .tpl-matrix-all:
   parallel:
     matrix:
-      - BUILD_VERSION: [ 'core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+      - BUILD_VERSION: [ 'core',
+                         'php5.6',
+                         'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4',
+                         'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
         BUILD_NPM: [ 'false', 'true' ]
 
 .tpl-build:
@@ -57,7 +62,13 @@ default:
     - BUILD_ARCH=${CI_RUNNER_EXECUTABLE_ARCH/\//-}
     - BUILD_IMAGE=$DOCKER_LOCAL-$BUILD_ARCH
     - BUILD_NAME=$DOCKER_UNIQ-$DOCKER_TAG-$BUILD_ARCH
-    - BUILD_ARGS=$([ "$BUILD_VERSION" = "core" ] && echo "--no-cache --cache-to type=registry,ref=$BUILD_CACHE-$BUILD_ARCH,mode=max" || echo "--cache-from type=registry,ref=$BUILD_CACHE-$BUILD_ARCH")
+    # Cache args
+    - |
+      if [ "$BUILD_VERSION" = "core" ]; then
+        BUILD_ARGS="--no-cache --cache-to type=registry,ref=$BUILD_CACHE-$BUILD_ARCH,mode=max"
+      else
+        BUILD_ARGS="--cache-from type=registry,ref=$BUILD_CACHE-$BUILD_ARCH"
+      fi
     # Saving for after_script
     - echo $BUILD_NAME > var_build_name
     - echo $BUILD_IMAGE > var_build_image
@@ -65,7 +76,14 @@ default:
     - docker context create "context-$CI_JOB_ID"
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     # Build
-    - docker buildx build $BUILD_ARGS --build-arg NPM_PACKAGE=$BUILD_NPM --build-arg PHP_VERSION=${DOCKER_PHP:-false} --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $BUILD_IMAGE --progress=plain --provenance=false . --load
+    - |
+      docker buildx build $BUILD_ARGS \
+        --build-arg NPM_PACKAGE=$BUILD_NPM \
+        --build-arg PHP_VERSION=${DOCKER_PHP:-false} \
+        --platform $CI_RUNNER_EXECUTABLE_ARCH \
+        --progress=plain --provenance=false \
+        --tag $BUILD_IMAGE --load \
+        .
     - docker push $BUILD_IMAGE
     # Test
     - docker run --name $BUILD_NAME $BUILD_IMAGE >/dev/null 2>&1 &
@@ -88,8 +106,12 @@ default:
 prepare_ssl:
   stage: prepare
   script:
+    - | 
+      openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+      -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
+      -keyout ./ssl/default.key \
+      -out ./ssl/default.crt
     - openssl dhparam -out ./ssl/dhparam.pem 4096
-    - openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./ssl/default.key -out ./ssl/default.crt -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null'
   artifacts:
     name: $DOCKER_UNIQ
     expire_in: 1 hour
@@ -147,8 +169,8 @@ release:
   extends:
     - .tpl-base
     - .tpl-matrix-all
-  only:
-    - master
+#  only:
+#    - master
   variables:
     # Arch list
     DOCKER_ARCHS: "linux/amd64 linux/arm64"
