@@ -6,6 +6,7 @@ services:
 variables:
   DOCKER_UNIQ: "${CI_PROJECT_NAME}-build-${CI_PIPELINE_ID}"
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
+  DOCKER_ARCHS: "linux/amd64 linux/arm64"
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
 
@@ -19,6 +20,29 @@ default:
   tags:
     - docker
 
+
+.tpl-matrix-core:
+  parallel:
+    matrix:
+      - BUILD_VERSION: [
+        'core'
+      ]
+        BUILD_NPM: [
+          'false', 'true'
+        ]
+
+.tpl-matrix-php:
+  parallel:
+    matrix:
+      - BUILD_VERSION: [
+        'php5.6',
+        'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4',
+        'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4'
+      ]
+        BUILD_NPM: [
+          'false', 'true'
+        ]
+
 .tpl-base:
   before_script:
     # Base variables
@@ -29,29 +53,6 @@ default:
     # Registry
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
-
-.tpl-matrix-core:
-  parallel:
-    matrix:
-      - BUILD_VERSION: [ 'core' ]
-        BUILD_NPM: [ 'false', 'true' ]
-
-.tpl-matrix-php:
-  parallel:
-    matrix:
-      - BUILD_VERSION: [ 'php5.6',
-                         'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4',
-                         'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
-        BUILD_NPM: [ 'false', 'true' ]
-
-.tpl-matrix-all:
-  parallel:
-    matrix:
-      - BUILD_VERSION: [ 'core',
-                         'php5.6',
-                         'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4',
-                         'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
-        BUILD_NPM: [ 'false', 'true' ]
 
 .tpl-build:
   extends:
@@ -102,6 +103,23 @@ default:
     - docker context rm "context-$CI_JOB_ID" || true
   needs:
     - job: prepare_ssl
+
+.tpl-release:
+  extends:
+    - .tpl-base
+  script:
+    # Composing
+    - DOCKER_IMAGES=""
+    - |
+      for DOCKER_ARCH in $DOCKER_ARCHS; do 
+        BUILD_ARCH=${DOCKER_ARCH/\//-}
+        docker pull $DOCKER_LOCAL-$BUILD_ARCH
+        DOCKER_IMAGES="$DOCKER_IMAGES $DOCKER_LOCAL-$BUILD_ARCH"
+      done
+    - echo "DOCKER_IMAGES=\"$DOCKER_IMAGES $DOCKER_LOCAL-$BUILD_ARCH\""
+    - docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_IMAGES
+    - echo "docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_IMAGES"
+    - docker rmi $DOCKER_IMAGES || true
 
 prepare_ssl:
   stage: prepare
@@ -164,28 +182,22 @@ build_php_arm64:
   tags:
     - linux-arm64
 
-release:
+release_core:
   stage: release
   extends:
-    - .tpl-base
-    - .tpl-matrix-all
-#  only:
-#    - master
-  variables:
-    # Arch list
-    DOCKER_ARCHS: "linux/amd64 linux/arm64"
-  script:
-    # Composing
-    - DOCKER_IMAGES=""
-    - |      
-      for DOCKER_ARCH in $DOCKER_ARCHS; do 
-        BUILD_ARCH=${DOCKER_ARCH/\//-}
-        docker pull $DOCKER_LOCAL-$BUILD_ARCH
-        DOCKER_IMAGES="$DOCKER_IMAGES $DOCKER_LOCAL-$BUILD_ARCH"
-      done
-    - echo "DOCKER_IMAGES=\"$DOCKER_IMAGES $DOCKER_LOCAL-$BUILD_ARCH\""
-    - docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_IMAGES
-    - echo "docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_IMAGES"
-    - docker rmi $DOCKER_IMAGES || true
+    - .tpl-release
+    - .tpl-matrix-core
+  #  only:
+  #    - master
+  tags:
+    - linux-amd64
+
+release_php:
+  stage: release
+  extends:
+    - .tpl-release
+    - .tpl-matrix-php
+  #  only:
+  #    - master
   tags:
     - linux-amd64
