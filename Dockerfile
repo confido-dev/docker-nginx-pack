@@ -28,19 +28,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GID=0 \
     UID=0
 
-ARG TARGETPLATFORM="linux/amd64"
-ARG TARGETARCH="amd64"
-ARG TARGETVARIANT=""
-
 ARG NPM_PACKAGE="false"
 ENV NPM_PACKAGE=${NPM_PACKAGE}
 
-RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" && \
-    printf ", TARGETARCH=${TARGETARCH}" && \
-    printf ", TARGETVARIANT=${TARGETVARIANT} \n" && \
-    printf "With uname -s : " && uname -s && \
-    printf "and  uname -m : " && uname -m && \
-    apt-get update && \
+RUN apt-get update && \
     apt-get install -y --no-install-recommends apt-utils apt-transport-https ca-certificates gnupg wget curl jq python3 && \
     REPO_CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
     printf "Current repo version is ${REPO_CODENAME}" && \
