@@ -28,6 +28,7 @@ default:
     - DOCKER_LOCAL=${CI_REGISTRY_IMAGE}:build-${CI_PIPELINE_ID}-${DOCKER_TAG}
     # Registry
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
 
 .tpl-matrix-core:
   parallel:
@@ -152,8 +153,6 @@ release:
     # Arch list
     DOCKER_ARCHS: "linux/amd64 linux/arm64"
   script:
-    # Registry
-    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
     # Composing
     - DOCKER_IMAGES=""
     - |      
