@@ -147,8 +147,8 @@ release:
   extends:
     - .tpl-base
     - .tpl-matrix-all
-#  only:
-#    - master
+  only:
+    - master
   variables:
     # Arch list
     DOCKER_ARCHS: "linux/amd64 linux/arm64"
