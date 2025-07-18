@@ -156,17 +156,17 @@ release:
     # Registry
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
     # Composing
-    - |
-      DOCKER_IMAGES=""
-      for DOCKER_ARCH in $DOCKER_ARCHS; do
+    - DOCKER_IMAGES=""
+    - |      
+      for DOCKER_ARCH in $DOCKER_ARCHS; do 
         BUILD_ARCH=${DOCKER_ARCH/\//-}
         docker pull $DOCKER_LOCAL-$BUILD_ARCH
         DOCKER_IMAGES="$DOCKER_IMAGES $DOCKER_LOCAL-$BUILD_ARCH"
       done
-      - echo "DOCKER_IMAGES=\"$DOCKER_IMAGES $DOCKER_LOCAL-$BUILD_ARCH\""
-      - docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_IMAGES
-      - echo "docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_IMAGES"
-      - docker rmi $DOCKER_IMAGES || true
+    - echo "DOCKER_IMAGES=\"$DOCKER_IMAGES $DOCKER_LOCAL-$BUILD_ARCH\""
+    - docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_IMAGES
+    - echo "docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_IMAGES"
+    - docker rmi $DOCKER_IMAGES || true
   tags:
     - linux-amd64
 
