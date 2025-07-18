@@ -85,8 +85,6 @@ default:
   needs:
     - job: prepare_ssl
 
-.tpl-release:
-
 prepare_ssl:
   stage: prepare
   script:
