@@ -39,13 +39,15 @@ default:
 .tpl-matrix-php:
   parallel:
     matrix:
-      - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+      # - BUILD_VERSION: [ 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+      - BUILD_VERSION: [ 'php5.6' ]
         BUILD_NPM: [ 'false', 'true' ]
 
 .tpl-matrix-all:
   parallel:
     matrix:
-      - BUILD_VERSION: [ 'core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+      # - BUILD_VERSION: [ 'core', 'php5.6', 'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4', 'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4' ]
+      - BUILD_VERSION: [ 'core', 'php5.6' ]
         BUILD_NPM: [ 'false', 'true' ]
 
 .tpl-build:
@@ -161,7 +163,7 @@ release:
         docker pull $DOCKER_LOCAL-$BUILD_ARCH
         DOCKER_IMAGES="$DOCKER_IMAGES $DOCKER_LOCAL-$BUILD_ARCH"
       done
-      - docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_SOURCES
+      - docker buildx imagetools create --tag $DOCKER_NAME:$DOCKER_TAG $DOCKER_IMAGES
       - docker rmi $DOCKER_IMAGES || true
   tags:
     - linux-amd64
