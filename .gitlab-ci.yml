@@ -60,9 +60,10 @@ default:
     - docker context create "context-$CI_JOB_ID"
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     # Build
-    - docker buildx build $BUILD_ARGS --build-arg NPM_PACKAGE=$BUILD_NPM --build-arg PHP_VERSION=${DOCKER_PHP:-false} --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $BUILD_IMAGE --progress=plain --provenance=false . --push
+    - docker buildx build $BUILD_ARGS --build-arg NPM_PACKAGE=$BUILD_NPM --build-arg PHP_VERSION=${DOCKER_PHP:-false} --platform $CI_RUNNER_EXECUTABLE_ARCH --tag $BUILD_IMAGE --progress=plain --provenance=false . --load
+    - docker push $BUILD_IMAGE
     # Test
-    - docker image pull $BUILD_IMAGE
+    # - docker image pull $BUILD_IMAGE
     - docker run --name $BUILD_NAME $BUILD_IMAGE >/dev/null 2>&1 &
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
     - docker exec $BUILD_NAME /bin/bash /health.sh
