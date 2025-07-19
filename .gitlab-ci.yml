@@ -78,6 +78,14 @@ default:
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     # Build
     - |
+      echo "docker buildx build $BUILD_ARGS \
+        --build-arg NPM_PACKAGE=$BUILD_NPM \
+        --build-arg PHP_VERSION=${DOCKER_PHP:-false} \
+        --platform $CI_RUNNER_EXECUTABLE_ARCH \
+        --progress=plain --provenance=false \
+        --tag $BUILD_IMAGE --load \
+        ."
+    - |
       docker buildx build $BUILD_ARGS \
         --build-arg NPM_PACKAGE=$BUILD_NPM \
         --build-arg PHP_VERSION=${DOCKER_PHP:-false} \
