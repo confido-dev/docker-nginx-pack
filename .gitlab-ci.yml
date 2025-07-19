@@ -187,8 +187,8 @@ release_core:
   extends:
     - .tpl-release
     - .tpl-matrix-core
-  #  only:
-  #    - master
+  only:
+    - master
   tags:
     - linux-amd64
 
@@ -197,7 +197,7 @@ release_php:
   extends:
     - .tpl-release
     - .tpl-matrix-php
-  #  only:
-  #    - master
+  only:
+    - master
   tags:
     - linux-amd64
