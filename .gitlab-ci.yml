@@ -39,7 +39,6 @@ default:
     - DOCKER_TAIL=$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     - DOCKER_TAG=$([ -n "$BUILD_PHP" ] && echo "php$BUILD_PHP" || echo "core")${DOCKER_TAIL}
     - DOCKER_LOCAL=${CI_REGISTRY_IMAGE}:build-${CI_PIPELINE_ID}-${DOCKER_TAG}
-    - echo "Version is \"$DOCKER_TAG\", PHP is \"$BUILD_PHP\""
     # Registry
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
