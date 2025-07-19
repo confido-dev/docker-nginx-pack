@@ -199,5 +199,7 @@ release_php:
     - .tpl-matrix-php
   only:
     - master
+  needs:
+    - release_core
   tags:
     - linux-amd64
