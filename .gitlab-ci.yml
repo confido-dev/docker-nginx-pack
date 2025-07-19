@@ -24,7 +24,7 @@ default:
 .tpl-matrix-core:
   parallel:
     matrix:
-      - BUILD_VERSION: [
+      - BUILD_PHP: [
         'core'
         ]
         BUILD_NPM: [
@@ -34,10 +34,10 @@ default:
 .tpl-matrix-php:
   parallel:
     matrix:
-      - BUILD_VERSION: [
-        'php5.6',
-        'php7.0', 'php7.1', 'php7.2', 'php7.3', 'php7.4',
-        'php8.0', 'php8.1', 'php8.2', 'php8.3', 'php8.4'
+      - BUILD_PHP: [
+        '5.6',
+        '7.0', '7.1', '7.2', '7.3', '7.4',
+        '8.0', '8.1', '8.2', '8.3', '8.4'
         ]
         BUILD_NPM: [
           'false', 'true'
@@ -46,11 +46,10 @@ default:
 .tpl-base:
   before_script:
     # Base variables
-    - DOCKER_PHP=$(echo "${BUILD_VERSION}" | grep -oP '^php\K.{3}' || echo "false")
-    - echo "Version is \"$BUILD_VERSION\", PHP is \"$DOCKER_PHP\""
     - DOCKER_TAIL=$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
-    - DOCKER_TAG=${BUILD_VERSION}${DOCKER_TAIL}
+    - DOCKER_TAG=$([ -n "$BUILD_PHP" ] && echo "php$BUILD_PHP" || echo "core")${DOCKER_TAIL}
     - DOCKER_LOCAL=${CI_REGISTRY_IMAGE}:build-${CI_PIPELINE_ID}-${DOCKER_TAG}
+    - echo "Version is \"$DOCKER_TAG\", PHP is \"$BUILD_PHP\""
     # Registry
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
@@ -66,7 +65,7 @@ default:
     - BUILD_NAME=$DOCKER_UNIQ-$DOCKER_TAG-$BUILD_ARCH
     # Cache args
     - |
-      if [ "$BUILD_VERSION" = "core" ]; then
+      if [ -z "$BUILD_PHP" ]; then
         BUILD_ARGS="--no-cache --cache-to type=registry,ref=$BUILD_CACHE-$BUILD_ARCH,mode=max"
       else
         BUILD_ARGS="--cache-from type=registry,ref=$BUILD_CACHE-$BUILD_ARCH"
@@ -79,17 +78,9 @@ default:
     - docker buildx create --name "builder-$CI_JOB_ID" --use "context-$CI_JOB_ID"
     # Build
     - |
-      echo "docker buildx build $BUILD_ARGS \
-        --build-arg NPM_PACKAGE=$BUILD_NPM \
-        --build-arg PHP_VERSION=$DOCKER_PHP} \
-        --platform $CI_RUNNER_EXECUTABLE_ARCH \
-        --progress=plain --provenance=false \
-        --tag $BUILD_IMAGE --load \
-        ."
-    - |
       docker buildx build $BUILD_ARGS \
         --build-arg NPM_PACKAGE=$BUILD_NPM \
-        --build-arg PHP_VERSION=$DOCKER_PHP \
+        --build-arg PHP_VERSION=$BUILD_PHP \
         --platform $CI_RUNNER_EXECUTABLE_ARCH \
         --progress=plain --provenance=false \
         --tag $BUILD_IMAGE --load \
