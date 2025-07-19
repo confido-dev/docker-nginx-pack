@@ -24,24 +24,14 @@ default:
 .tpl-matrix-core:
   parallel:
     matrix:
-      - BUILD_PHP: [
-        'core'
-        ]
-        BUILD_NPM: [
-          'false', 'true'
-        ]
+      - BUILD_PHP: [ '' ]
+        BUILD_NPM: [ 'false', 'true' ]
 
 .tpl-matrix-php:
   parallel:
     matrix:
-      - BUILD_PHP: [
-        '5.6',
-        '7.0', '7.1', '7.2', '7.3', '7.4',
-        '8.0', '8.1', '8.2', '8.3', '8.4'
-        ]
-        BUILD_NPM: [
-          'false', 'true'
-        ]
+      - BUILD_PHP: [ '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4' ]
+        BUILD_NPM: [ 'false', 'true' ]
 
 .tpl-base:
   before_script:
@@ -79,8 +69,8 @@ default:
     # Build
     - |
       docker buildx build $BUILD_ARGS \
-        --build-arg NPM_PACKAGE=$BUILD_NPM \
-        --build-arg PHP_VERSION=$BUILD_PHP \
+        --build-arg NPM_PACKAGE=${BUILD_NPM:-false} \
+        --build-arg PHP_VERSION=${BUILD_PHP:-false} \
         --platform $CI_RUNNER_EXECUTABLE_ARCH \
         --progress=plain --provenance=false \
         --tag $BUILD_IMAGE --load \
