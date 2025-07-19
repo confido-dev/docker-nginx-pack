@@ -44,13 +44,12 @@ default:
         ]
 
 .tpl-base:
-  variables:
-    # Base variables
-    DOCKER_PHP: $([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "false")
-    DOCKER_TAIL: $([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
-    DOCKER_TAG: ${BUILD_VERSION}${DOCKER_TAIL}
-    DOCKER_LOCAL: ${CI_REGISTRY_IMAGE}:build-${CI_PIPELINE_ID}-${DOCKER_TAG}
   before_script:
+    # Base variables
+    - DOCKER_PHP=$([[ $BUILD_VERSION == php* ]] && echo ${BUILD_VERSION:3:3} || echo "false")
+    - DOCKER_TAIL=$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
+    - DOCKER_TAG=${BUILD_VERSION}${DOCKER_TAIL}
+    - DOCKER_LOCAL=${CI_REGISTRY_IMAGE}:build-${CI_PIPELINE_ID}-${DOCKER_TAG}
     # Registry
     - echo "TEST PHP $BUILD_VERSION"
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
