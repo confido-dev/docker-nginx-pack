@@ -46,13 +46,12 @@ default:
 .tpl-base:
   before_script:
     # Base variables
-    - DOCKER_PHP=$(echo "$BUILD_VERSION" | grep -oP '^php\K.{3}' || echo "false")
-    - echo "Version is $BUILD_VERSION, PHP is $DOCKER_PHP"
+    - DOCKER_PHP=$(echo "${BUILD_VERSION}" | grep -oP '^php\K.{3}' || echo "false")
+    - echo "Version is \"$BUILD_VERSION\", PHP is \"$DOCKER_PHP\""
     - DOCKER_TAIL=$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
     - DOCKER_TAG=${BUILD_VERSION}${DOCKER_TAIL}
     - DOCKER_LOCAL=${CI_REGISTRY_IMAGE}:build-${CI_PIPELINE_ID}-${DOCKER_TAG}
     # Registry
-    - echo "TEST PHP $BUILD_VERSION"
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
 
@@ -82,7 +81,7 @@ default:
     - |
       echo "docker buildx build $BUILD_ARGS \
         --build-arg NPM_PACKAGE=$BUILD_NPM \
-        --build-arg PHP_VERSION=${DOCKER_PHP:-false} \
+        --build-arg PHP_VERSION=$DOCKER_PHP} \
         --platform $CI_RUNNER_EXECUTABLE_ARCH \
         --progress=plain --provenance=false \
         --tag $BUILD_IMAGE --load \
@@ -90,7 +89,7 @@ default:
     - |
       docker buildx build $BUILD_ARGS \
         --build-arg NPM_PACKAGE=$BUILD_NPM \
-        --build-arg PHP_VERSION=${DOCKER_PHP:-false} \
+        --build-arg PHP_VERSION=$DOCKER_PHP \
         --platform $CI_RUNNER_EXECUTABLE_ARCH \
         --progress=plain --provenance=false \
         --tag $BUILD_IMAGE --load \
