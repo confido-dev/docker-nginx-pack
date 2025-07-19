@@ -3,7 +3,7 @@
 ---
 
 [![GitHub](/.info/github.png)](https://github.com/confido-dev/docker-nginx-pack) 
-[![DockerHub](/.info/docker.png)](https://hub.docker.com/repository/docker/confido/nginx-pack) 
+[![DockerHub](/.info/docker.png)](https://hub.docker.com/r/confido/nginx-pack) 
 
 ---
 
@@ -25,7 +25,9 @@ php8.2
 php8.3
 php8.4
 ````
-В случае использование внешней папки с файлами проекта, они должны быть примонтированны в контейнер по пути `/var/www`.
+Существует так же опция с уже установленными nodejs/npm - достигается добавлением постфикса `-npm` к выбранной версии.
+
+В случае использование внешней папки с файлами проекта, они должны быть примонтированы в контейнер по пути `/var/www`.
 
 
 ### Опции контейнера
