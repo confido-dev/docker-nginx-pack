@@ -50,7 +50,8 @@ RUN apt-get update && \
                        cron supervisor \
                        libmaxminddb0 mmdb-bin  \
                        nginx nginx-amplify-agent \
-                       libmaxminddb0 libmaxminddb-dev mmdb-bin && \
+                       libnginx-mod-http-brotli-filter \
+                       libnginx-mod-http-brotli-static && \
     apt-get autoremove -y --purge && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log
 
