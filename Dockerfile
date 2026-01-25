@@ -28,9 +28,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GID=0 \
     UID=0
 
-ARG NPM_PACKAGE="false"
-ENV NPM_PACKAGE=${NPM_PACKAGE}
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends apt-utils apt-transport-https ca-certificates gnupg wget curl jq python3 && \
     REPO_CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
@@ -105,12 +102,6 @@ RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xarg
     unlink /var/log/nginx/access.log && \
     unlink /var/log/nginx/error.log && \
     mkdir $WWW_HOME -p
-
-RUN if [ "${NPM_PACKAGE}" = "true" ]; then \
-        apt-get update && \
-        apt-get install -y nodejs npm && \
-        apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log \
-    ; fi
 
 
 #########################
