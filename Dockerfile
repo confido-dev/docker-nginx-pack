@@ -129,19 +129,23 @@ RUN if [ "${PHP_VERSION}" != "false" ]; then \
                            php${PHP_VERSION}-cli \
                            php${PHP_VERSION}-xml \
                            php${PHP_VERSION}-curl \
+                           php${PHP_VERSION}-sockets \
                            php${PHP_VERSION}-mysqli \
+                           php${PHP_VERSION}-sqlite \
                            php${PHP_VERSION}-pgsql \
                            php${PHP_VERSION}-mongodb \
                            php${PHP_VERSION}-mbstring \
+                           php${PHP_VERSION}-mcrypt \
                            php${PHP_VERSION}-bcmath \
-                           php${PHP_VERSION}-opcache \
                            php${PHP_VERSION}-intl \
                            php${PHP_VERSION}-zip \
                            php${PHP_VERSION}-gd \
                            php${PHP_VERSION}-imagick \
-                           php${PHP_VERSION}-xdebug \
                            php${PHP_VERSION}-redis \
                            php${PHP_VERSION}-apcu \
+                           php${PHP_VERSION}-opcache \
+                           php${PHP_VERSION}-memcached \
+                           php${PHP_VERSION}-xdebug \
                            zip unzip && \
         case "$PHP_VERSION" in \
             8.[0-9]) ;; \
