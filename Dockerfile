@@ -143,14 +143,11 @@ RUN if [ "${PHP_VERSION}" != "false" ]; then \
                            php${PHP_VERSION}-imagick \
                            php${PHP_VERSION}-redis \
                            php${PHP_VERSION}-apcu \
-                           php${PHP_VERSION}-opcache \
                            php${PHP_VERSION}-memcached \
                            php${PHP_VERSION}-xdebug \
                            zip unzip && \
-        case "$PHP_VERSION" in \
-            8.[0-9]) ;; \
-            *) apt-get install -y php${PHP_VERSION}-json ;; \
-        esac && \
+        if dpkg --compare-versions "$PHP_VERSION" lt "8.0"; then apt-get install -y php${PHP_VERSION}-json; fi && \
+        if dpkg --compare-versions "$PHP_VERSION" lt "8.5"; then apt-get install -y php${PHP_VERSION}-opcache; fi && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
         mv /etc/php/${PHP_VERSION} /etc/php/current && ln -s /etc/php/current /etc/php/${PHP_VERSION} && \
         rm -rf /etc/php/current/cli/conf.d && ln -s /etc/php/current/fpm/conf.d /etc/php/current/cli/conf.d && \
