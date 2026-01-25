@@ -48,6 +48,7 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y git nano \
                        cron supervisor \
+                       libmaxminddb0 mmdb-bin  \
                        nginx nginx-amplify-agent \
                        libmaxminddb0 libmaxminddb-dev mmdb-bin && \
     apt-get autoremove -y --purge && \
