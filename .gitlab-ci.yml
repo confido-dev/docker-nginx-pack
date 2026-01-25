@@ -24,22 +24,18 @@ default:
 .tpl-matrix-core:
   parallel:
     matrix:
-      - BUILD_PHP: [ '' ]
-        BUILD_NPM: [ 'false', 'true' ]
+      - BUILD_PHP: [ 'null' ]
 
 .tpl-matrix-php:
   parallel:
     matrix:
-      - BUILD_PHP: [ '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4' ]
-        BUILD_NPM: [ 'false', 'true' ]
+      - BUILD_PHP: [ '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5' ]
 
 .tpl-base:
   before_script:
     # Base variables
-    - DOCKER_TAIL=$([[ $BUILD_NPM == "true" ]] && echo "-npm" || echo "")
-    - DOCKER_TAG=$([ -n "$BUILD_PHP" ] && echo "php$BUILD_PHP" || echo "core")${DOCKER_TAIL}
+    - DOCKER_TAG=$([ "$BUILD_PHP" != "null" ] && echo "php$BUILD_PHP" || echo "core")
     - DOCKER_LOCAL=${CI_REGISTRY_IMAGE}:build-${CI_PIPELINE_ID}-${DOCKER_TAG}
-    - echo "Version is \"$DOCKER_TAG\", PHP is \"$BUILD_PHP\""
     # Registry
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
@@ -49,13 +45,13 @@ default:
     - .tpl-base
   script:
     # Build variables
-    - BUILD_CACHE=${CI_REGISTRY_IMAGE}:cache-${CI_PIPELINE_ID}-core${DOCKER_TAIL}
+    - BUILD_CACHE=${CI_REGISTRY_IMAGE}:cache-${CI_PIPELINE_ID}-core
     - BUILD_ARCH=${CI_RUNNER_EXECUTABLE_ARCH/\//-}
     - BUILD_IMAGE=$DOCKER_LOCAL-$BUILD_ARCH
     - BUILD_NAME=$DOCKER_UNIQ-$DOCKER_TAG-$BUILD_ARCH
     # Cache args
     - |
-      if [ -z "$BUILD_PHP" ]; then
+      if [ "$BUILD_PHP" = "null" ]; then
         BUILD_ARGS="--no-cache --cache-to type=registry,ref=$BUILD_CACHE-$BUILD_ARCH,mode=max"
       else
         BUILD_ARGS="--cache-from type=registry,ref=$BUILD_CACHE-$BUILD_ARCH"
@@ -69,8 +65,7 @@ default:
     # Build
     - |
       docker buildx build $BUILD_ARGS \
-        --build-arg NPM_PACKAGE=${BUILD_NPM:-false} \
-        --build-arg PHP_VERSION=${BUILD_PHP:-false} \
+        --build-arg PHP_VERSION=$([ "$BUILD_PHP" = "null" ] && echo false || echo "$BUILD_PHP") \
         --platform $CI_RUNNER_EXECUTABLE_ARCH \
         --progress=plain --provenance=false \
         --tag $BUILD_IMAGE --load \
