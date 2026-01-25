@@ -35,16 +35,16 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends apt-utils apt-transport-https ca-certificates gnupg wget curl jq python3 && \
     REPO_CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
     printf "Current repo version is ${REPO_CODENAME}" && \
-    echo "deb http://packages.amplify.nginx.com/py3/ubuntu/ ${REPO_CODENAME} amplify-agent" >> /etc/apt/sources.list && \
-    echo "deb https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
-    echo "deb-src https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
-    echo "deb https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
-    echo "deb https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
-    echo "deb https://ppa.launchpadcontent.net/ondrej/php-qa/ubuntu ${REPO_CODENAME} main" >> /etc/apt/sources.list && \
-    curl -s 'https://nginx.org/keys/nginx_signing.key' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/nginx_org.gpg --import && \
-    curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4f4ea0aae5267a6c' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/ondrej_ppa.gpg --import && \
-    curl -s 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa' | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/maxmind_ppa.gpg --import && \
-    chmod 644 /etc/apt/trusted.gpg.d/* && \
+    install -m 0755 -d /etc/apt/keyrings /etc/apt/sources.list.d && \
+    curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor -o /etc/apt/keyrings/nginx.gpg && \
+    curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4f4ea0aae5267a6c" | gpg --dearmor -o /etc/apt/keyrings/ondrej.gpg && \
+    curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa" | gpg --dearmor -o /etc/apt/keyrings/maxmind.gpg && \
+    chmod 0644 /etc/apt/keyrings/*.gpg  && \
+    echo "deb [signed-by=/etc/apt/keyrings/nginx.gpg] https://packages.amplify.nginx.com/py3/ubuntu/ ${REPO_CODENAME} amplify-agent" > /etc/apt/sources.list.d/nginx-amplify.list && \
+    echo "deb [signed-by=/etc/apt/keyrings/ondrej.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/ondrej-php.list && \
+    echo "deb [signed-by=/etc/apt/keyrings/ondrej.gpg] https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/ondrej-nginx.list && \
+    echo "deb-src [signed-by=/etc/apt/keyrings/ondrej.gpg] https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/ondrej-nginx.list && \
+    echo "deb [signed-by=/etc/apt/keyrings/maxmind.gpg] https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/maxmind.list && \
     apt-get update && \
     apt-get install -y git nano \
                        cron supervisor \
@@ -62,7 +62,7 @@ FROM base AS builder
 WORKDIR /tmp
 
 RUN apt-get update && \
-    apt-get install dpkg-dev openssl -y && \
+    apt-get install dpkg-dev libmaxminddb-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
