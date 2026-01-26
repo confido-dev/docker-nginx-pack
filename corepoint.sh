@@ -104,7 +104,7 @@ fi
 # XDebug
 if [ "${PHP_VERSION}" != "false" ] && [ -n "${XDEBUG_CONFIG}" ]; then
     echo " ---> Enabling XDebug module"
-    ln -sf /etc/php/current/mods-available/xdebug.ini /etc/php/current/fpm/conf.d/20-xdebug.ini
+    ln -sf /etc/php/current/mods-available/xdebug.ini /etc/php/current/fpm/conf.d/70-xdebug.ini
 fi
 
 

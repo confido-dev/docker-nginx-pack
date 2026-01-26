@@ -88,6 +88,8 @@ COPY --from=builder --chmod=644 /tmp/ngx_http_geoip2_module.so /usr/lib/nginx/mo
 RUN rm -rf /etc/nginx/modules-enabled/* && \
     mkdir /usr/share/nginx/modules-available -p && \
     echo "load_module modules/ngx_http_geoip2_module.so;" > /usr/share/nginx/modules-available/mod-http-geoip2.conf && \
+    ln -sf /usr/share/nginx/modules-available/mod-http-brotli-filter.conf /etc/nginx/modules-enabled/60-mod-http-brotli-filter.conf && \
+    ln -sf /usr/share/nginx/modules-available/mod-http-brotli-static.conf /etc/nginx/modules-enabled/61-mod-http-brotli-static.conf && \
     rm -rf /etc/nginx/sites-enabled/* && \
     rm -f /etc/nginx/fastcgi_params && \
     mv /etc/nginx/fastcgi.conf /etc/nginx/fastcgi.default.conf && \
