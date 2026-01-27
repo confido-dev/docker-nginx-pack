@@ -4,6 +4,7 @@ server {
     server_name _;
     root /var/www;
     include conf.d/drop.conf;
+    include conf.d/compression.conf;
     index index.html index.php;
     location / {
         try_files $uri $uri/ =404;
@@ -21,6 +22,7 @@ server {
     root /var/www;
     include conf.d/drop.conf;
     include conf.d/ssl-dummy.conf;
+    include conf.d/compression.conf;
     index index.html index.php;
     location / {
         try_files $uri $uri/ =404;
