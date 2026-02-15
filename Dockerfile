@@ -176,4 +176,6 @@ EXPOSE 443
 
 ENTRYPOINT ["/bin/bash", "/corepoint.sh"]
 
+WORKDIR ${WWW_HOME}
+
 HEALTHCHECK --timeout=10s CMD /bin/bash /health.sh
