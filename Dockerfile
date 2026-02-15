@@ -17,12 +17,6 @@ FROM ubuntu:noble AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
-    AMPLIFY_HOST="" \
-    AMPLIFY_UUID="" \
-    AMPLIFY_NAME="" \
-    AMPLIFY_KEY="" \
-    AMPLIFY_TAG="" \
-    AMPLIFY_HINT="default" \
     NGINX_REALIP="" \
     WWW_HOME="/var/www" \
     GID=0 \
@@ -37,16 +31,14 @@ RUN apt-get update && \
     curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4f4ea0aae5267a6c" | gpg --dearmor -o /etc/apt/keyrings/ondrej.gpg && \
     curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa" | gpg --dearmor -o /etc/apt/keyrings/maxmind.gpg && \
     chmod 0644 /etc/apt/keyrings/*.gpg  && \
-    echo "deb [signed-by=/etc/apt/keyrings/nginx.gpg] https://packages.amplify.nginx.com/py3/ubuntu/ ${REPO_CODENAME} amplify-agent" > /etc/apt/sources.list.d/nginx-amplify.list && \
     echo "deb [signed-by=/etc/apt/keyrings/ondrej.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/ondrej-php.list && \
     echo "deb [signed-by=/etc/apt/keyrings/ondrej.gpg] https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/ondrej-nginx.list && \
     echo "deb-src [signed-by=/etc/apt/keyrings/ondrej.gpg] https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/ondrej-nginx.list && \
     echo "deb [signed-by=/etc/apt/keyrings/maxmind.gpg] https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/maxmind.list && \
     apt-get update && \
     apt-get install -y git nano \
-                       cron supervisor \
+                       nginx cron supervisor \
                        libmaxminddb0 mmdb-bin  \
-                       nginx nginx-amplify-agent \
                        libnginx-mod-http-brotli-filter \
                        libnginx-mod-http-brotli-static && \
     apt-get autoremove -y --purge && \
@@ -96,11 +88,10 @@ RUN rm -rf /etc/nginx/modules-enabled/* && \
     rm -f /etc/nginx/nginx.conf
 
 COPY ./nginx /etc/nginx
-COPY ./amplify /etc/amplify-agent
 COPY ./supervisor /etc/supervisor
 
-RUN find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type d -print0 | xargs -0 chmod 755 && \
-    find /etc/nginx/ /etc/amplify-agent/ /etc/supervisor/ -type f -print0 | xargs -0 chmod 644 && \
+RUN find /etc/nginx/ /etc/supervisor/ -type d -print0 | xargs -0 chmod 755 && \
+    find /etc/nginx/ /etc/supervisor/ -type f -print0 | xargs -0 chmod 644 && \
     unlink /var/log/nginx/access.log && \
     unlink /var/log/nginx/error.log && \
     mkdir $WWW_HOME -p
