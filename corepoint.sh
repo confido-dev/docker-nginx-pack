@@ -109,45 +109,13 @@ fi
 
 
 #########################
-###     AMPLIFYING    ###
-#########################
-if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}" ]; then
-    echo " :: SETTING AMPLIFY"
-    if [ "${PHP_VERSION}" != "false" ]; then FPM_ENABLED=True; else FPM_ENABLED=False; fi
-    sh -c "sed -i.old -e 's~^phpfpm =.*$~phpfpm = $FPM_ENABLED~' /etc/amplify-agent/agent.conf"
-    sh -c "sed -i.old -e 's~^api_key =.*$~api_key = $AMPLIFY_KEY~' /etc/amplify-agent/agent.conf"
-    sh -c "sed -i.old -e 's~^hostname =.*$~hostname = $AMPLIFY_HOST~' /etc/amplify-agent/agent.conf"
-    sh -c "sed -i.old -e 's~^uuid =.*$~uuid = $AMPLIFY_UUID~' /etc/amplify-agent/agent.conf"
-    sh -c "sed -i.old -e 's~^imagename =.*$~imagename = $AMPLIFY_NAME~' /etc/amplify-agent/agent.conf"
-    sh -c "sed -i.old -e 's~^tags =.*$~tags = $AMPLIFY_TAG~' /etc/amplify-agent/agent.conf"
-    rm /etc/amplify-agent/agent.conf.old && chmod 640 /etc/amplify-agent/agent.conf
-fi
-
-
-#########################
-###      TAGGING      ###
-#########################
-echo " :: TAGGING CONFS"
-# Cleaning
-rm -rf /etc/nginx/nginx-${AMPLIFY_HINT}.conf
-if [ "${PHP_VERSION}" != "false" ]; then
-    rm -rf /etc/php/current/fpm/php-fpm-${AMPLIFY_HINT}.conf
-fi
-# Tagging
-ln -s /etc/nginx/nginx.conf /etc/nginx/nginx-${AMPLIFY_HINT}.conf
-if [ "${PHP_VERSION}" != "false" ]; then
-    ln -s /etc/php/current/fpm/php-fpm.conf /etc/php/current/fpm/php-fpm-${AMPLIFY_HINT}.conf
-fi
-
-
-#########################
 ###      TESTING      ###
 #########################
 echo " :: TESTING NGINX"
 nginx -t
 if [ "${PHP_VERSION}" != "false" ]; then
     echo " :: TESTING PHP-FPM"
-    php-fpm --fpm-config /etc/php/current/fpm/php-fpm-${AMPLIFY_HINT}.conf --allow-to-run-as-root -t
+    php-fpm --fpm-config /etc/php/current/fpm/php-fpm.conf --allow-to-run-as-root -t
 fi
 
 
@@ -190,12 +158,10 @@ fi
 #########################
 echo " :: STARTING"
 cat /etc/supervisor/supervisord_core.conf > /etc/supervisor/supervisord.conf
-if [ -n "${AMPLIFY_KEY}" ] && [ -n "${AMPLIFY_HOST}" ] && [ -n "${AMPLIFY_NAME}" ]; then cat /etc/supervisor/supervisord_amplify.conf >> /etc/supervisor/supervisord.conf; fi
 if [ -f "/crontab.txt"   ]; then cat /etc/supervisor/supervisord_cron.conf >> /etc/supervisor/supervisord.conf; fi
 if [ "${PHP_VERSION}" != "false" ]; then cat /etc/supervisor/supervisord_php.conf >> /etc/supervisor/supervisord.conf; fi
 unset NGINX_REALIP PHP_VERSION
 unset GID UID FORCE_CHMOD FORCE_CHMOD_ALL
-unset AMPLIFY_HOST AMPLIFY_UUID AMPLIFY_NAME AMPLIFY_KEY AMPLIFY_TAG
 trap stop SIGTERM SIGINT SIGQUIT SIGHUP
 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf & SUPERVISOR_PID=$!
 wait "${SUPERVISOR_PID}"
