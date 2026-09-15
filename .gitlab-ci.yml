@@ -70,13 +70,23 @@ default:
         --progress=plain --provenance=false \
         --tag $BUILD_IMAGE --load \
         .
-    - docker push $BUILD_IMAGE
     # Test
     - docker run -d --name $BUILD_NAME $BUILD_IMAGE
-    - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
+    - echo "Waiting for container to be up and running.."
     - docker exec $BUILD_NAME /bin/bash /health.sh
     - DOCKER_CODE=$?
     - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
+    - |
+      ready=false
+      deadline=$(( $(date +%s) + 60 ))
+      while [ "$(date +%s)" -lt "$deadline" ]; do
+        if [ "$(docker inspect --format '{{.State.Running}}' "$BUILD_NAME")" != "true" ]; then break; fi
+        if docker exec "$BUILD_NAME" /bin/bash /health.sh; then ready=true; break; fi
+        sleep 2
+      done
+      if [ "$ready" != "true" ]; then echo "Container did not become ready"; exit 1; fi
+    # Push
+    - docker push $BUILD_IMAGE
   after_script:
     # Logs && Cleaning
     - BUILD_NAME=$(cat var_build_name)
