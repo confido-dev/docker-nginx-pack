@@ -88,7 +88,6 @@ RUN if [ "${PHP_VERSION}" != "false" ]; then \
                            php${PHP_VERSION}-mysqli \
                            php${PHP_VERSION}-sqlite \
                            php${PHP_VERSION}-pgsql \
-                           php${PHP_VERSION}-mongodb \
                            php${PHP_VERSION}-mbstring \
                            php${PHP_VERSION}-mcrypt \
                            php${PHP_VERSION}-bcmath \
