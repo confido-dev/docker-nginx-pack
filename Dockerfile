@@ -138,7 +138,10 @@ RUN if [ "${PHP_VERSION}" != "false" ]; then \
         rm -f /etc/php/current/cli/php.ini && ln -s /etc/php/current/fpm/php.ini /etc/php/current/cli/php.ini && \
         ln -s /usr/sbin/php-fpm${PHP_VERSION} /usr/sbin/php-fpm && \
         rm -rf /etc/php/current/fpm/pool.d/* && \
-        curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+        curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php && \
+        echo "$(curl -fsSL https://composer.github.io/installer.sig)  /tmp/composer-setup.php" | sha384sum -c - && \
+        php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
+        rm -f /tmp/composer-setup.php \
     ; fi
 
 COPY ./php-fpm/fpm /etc/php/current/fpm
