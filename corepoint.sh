@@ -76,8 +76,7 @@ rm -f /etc/nginx/modules-enabled/50-mod-http-geoip2.conf
 # Resetting proxy_pass headers
 cat /etc/nginx/conf.d/sources/proxy-headers-basic.conf > /etc/nginx/conf.d/proxy-headers.conf
 # Cleaning XDebug
-rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini \
-      /etc/php/current/fpm/conf.d/70-xdebug.ini
+rm -f /etc/php/current/fpm/conf.d/*-xdebug.ini
 # RealIP
 if [ -n "${NGINX_REALIP}" ]; then
     echo " ---> Enabling NGINX RealIP module"
