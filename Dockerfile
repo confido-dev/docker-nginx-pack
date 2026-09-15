@@ -45,7 +45,7 @@ RUN apt-get update --error-on=any && \
 #########################
 FROM base AS core
 
-COPY ./ssl /tmp/ssl
+COPY ./ssl /etc/nginx/ssl
 
 RUN rm -rf /etc/nginx/modules-enabled/* && \
     mkdir /usr/share/nginx/modules-available -p && \
