@@ -1,9 +1,3 @@
-Types: deb deb-src
-URIs: https://nginx.org/packages/ubuntu
-Suites: resolute
-Components: nginx
-Signed-By: /usr/share/keyrings/nginx-archive-keyring.gpg
-
 Types: deb
 URIs: https://packages.sury.org/php/
 Suites: resolute

@@ -33,6 +33,7 @@ RUN apt-get update --error-on=any && \
     apt-get install -y git nano curl jq \
                        nginx cron supervisor \
                        libmaxminddb0 mmdb-bin  \
+                       libnginx-mod-http-geoip2 \
                        libnginx-mod-http-brotli-filter \
                        libnginx-mod-http-brotli-static && \
     apt-get autoremove -y --purge && \
@@ -40,36 +41,11 @@ RUN apt-get update --error-on=any && \
 
 
 #########################
-###      BUILDER      ###
-#########################
-FROM base AS builder
-
-WORKDIR /tmp
-
-RUN apt-get update --error-on=any && \
-    apt-get install dpkg-dev libmaxminddb-dev openssl -y && \
-    apt-get build-dep nginx -y  && \
-    apt-get source nginx && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
-    if [ ! -d "ngx_http_geoip2_module" ]; then git clone https://github.com/leev/ngx_http_geoip2_module.git; fi && \
-    echo './configure' > /tmp/nginx.sh && \
-    nginx -V 2>&1 | grep 'configure arguments' | sed 's/.*configure arguments: //' | sed 's/ --add-dynamic-module.*$//' >> /tmp/nginx.sh && \
-    echo '--add-dynamic-module=../ngx_http_geoip2_module' >> /tmp/nginx.sh && \
-    sed -i ':a;N;$!ba;s/\n/ /g' /tmp/nginx.sh && \
-    chmod +x /tmp/nginx.sh && \
-    cd nginx-* && /tmp/nginx.sh && make -j1 modules && \
-    cp /tmp/nginx-*/objs/ngx_http_geoip2_module.so /tmp/ngx_http_geoip2_module.so
-
-COPY ./ssl /tmp/ssl
-
-
-#########################
 ###     COMPOSING     ###
 #########################
 FROM base AS core
 
-COPY --from=builder /tmp/ssl /etc/nginx/ssl
-COPY --from=builder --chmod=644 /tmp/ngx_http_geoip2_module.so /usr/lib/nginx/modules/ngx_http_geoip2_module.so
+COPY ./ssl /tmp/ssl
 
 RUN rm -rf /etc/nginx/modules-enabled/* && \
     mkdir /usr/share/nginx/modules-available -p && \
