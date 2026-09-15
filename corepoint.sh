@@ -29,8 +29,9 @@ if [ -n "${FORCE_CHMOD}" ]; then
 fi
 # Chowning app files recursive
 if [ -n "${FORCE_CHMOD_ALL}" ]; then
-    chown $UID:$GID $WWW_HOME -R
-    chmod 0750 $WWW_HOME -R
+    chown -R $UID:$GID $WWW_HOME
+    find $WWW_HOME -type d -exec chmod 0750 {} +
+    find $WWW_HOME -type f -exec chmod 0640 {} +
 fi
 # Fixing NGINX
 sh -c "sed -i.old -e 's~^user.*$~user $WWW_USER $WWW_GROUP;~' /etc/nginx/nginx.conf"
