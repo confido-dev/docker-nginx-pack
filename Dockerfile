@@ -22,10 +22,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GID=0 \
     UID=0
 
+RUN apt-get update --error-on=any && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log
+
 COPY --chmod=0644 apt/*.sources /etc/apt/sources.list.d/
 COPY --chmod=0644 apt/keyrings/*.gpg /usr/share/keyrings/
 
-RUN apt-get update && \
+RUN apt-get update --error-on=any && \
     apt-get install -y git nano curl jq \
                        nginx cron supervisor \
                        libmaxminddb0 mmdb-bin  \
@@ -42,7 +46,7 @@ FROM base AS builder
 
 WORKDIR /tmp
 
-RUN apt-get update && \
+RUN apt-get update --error-on=any && \
     apt-get install dpkg-dev libmaxminddb-dev openssl -y && \
     apt-get build-dep nginx -y  && \
     apt-get source nginx && \
@@ -96,7 +100,7 @@ ARG PHP_VERSION="false"
 ENV PHP_VERSION=${PHP_VERSION}
 
 RUN if [ "${PHP_VERSION}" != "false" ]; then \
-        apt-get update && \
+        apt-get update --error-on=any && \
         apt-get install -y libfcgi0ldbl \
                            php${PHP_VERSION}-common \
                            php${PHP_VERSION}-fpm \

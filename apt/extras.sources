@@ -5,13 +5,13 @@ Components: nginx
 Signed-By: /usr/share/keyrings/nginx-archive-keyring.gpg
 
 Types: deb
-URIs: https://packages.sury.org/php/
+URIs: https://ppa.launchpadcontent.net/ondrej/php/ubuntu
 Suites: resolute
 Components: main
-Signed-By: /usr/share/keyrings/debsuryorg-archive-keyring.gpg
+Signed-By: /usr/share/keyrings/ondrej-ppa-keyring.gpg
 
 Types: deb
 URIs: https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu
 Suites: resolute
 Components: main
-Signed-By: /usr/share/keyrings/maxmind-archive-keyring.gpg
+Signed-By: /usr/share/keyrings/maxmind-ppa-keyring.gpg
