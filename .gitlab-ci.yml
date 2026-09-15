@@ -119,7 +119,6 @@ prepare_ssl:
       -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null' \
       -keyout ./ssl/default.key \
       -out ./ssl/default.crt
-    - openssl dhparam -out ./ssl/dhparam.pem 4096
   artifacts:
     name: $DOCKER_UNIQ
     expire_in: 1 hour
