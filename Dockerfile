@@ -62,6 +62,7 @@ COPY ./supervisor /etc/supervisor
 
 RUN find /etc/nginx/ /etc/supervisor/ -type d -print0 | xargs -0 chmod 755 && \
     find /etc/nginx/ /etc/supervisor/ -type f -print0 | xargs -0 chmod 644 && \
+    chmod 0600 /etc/nginx/ssl/* && \
     unlink /var/log/nginx/access.log && \
     unlink /var/log/nginx/error.log && \
     mkdir $WWW_HOME -p
