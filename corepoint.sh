@@ -22,16 +22,14 @@ if [ -z "$WWW_USER" ]; then
     adduser --shell /bin/bash --home /home/$WWW_USER --uid $UID --gid $GID --disabled-password --gecos "" $WWW_USER
     echo " ---> User ${WWW_USER} created"
 else echo " ---> Using user ${WWW_USER}"; fi
-# Chowning app files
-if [ -n "${FORCE_CHMOD}" ]; then
-    chown $UID:$GID $WWW_HOME
-    chmod 0750 $WWW_HOME
-fi
 # Chowning app files recursive
-if [ -n "${FORCE_CHMOD_ALL}" ]; then
-    chown -R $UID:$GID $WWW_HOME
-    find $WWW_HOME -type d -exec chmod 0750 {} +
-    find $WWW_HOME -type f -exec chmod 0640 {} +
+if [ -n "${FORCE_CHMOD_ALL:-}" ]; then
+    chown -R -- "$UID:$GID" "$WWW_HOME"
+    chmod -R -- u=rwX,g=rX,o= "$WWW_HOME"
+# Chowning app files
+elif [ -n "${FORCE_CHMOD:-}" ]; then
+    chown -- "$UID:$GID" "$WWW_HOME"
+    chmod -- 0750 "$WWW_HOME"
 fi
 # Fixing NGINX
 sh -c "sed -i.old -e 's~^user.*$~user $WWW_USER $WWW_GROUP;~' /etc/nginx/nginx.conf"
