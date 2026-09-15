@@ -13,7 +13,7 @@
 #########################
 ###     BASE NGINX    ###
 #########################
-FROM ubuntu:noble AS base
+FROM ubuntu:resolute AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
@@ -22,21 +22,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GID=0 \
     UID=0
 
+COPY --chmod=0644 apt/*.sources /etc/apt/sources.list.d/
+COPY --chmod=0644 apt/keyrings/*.gpg /usr/share/keyrings/
+
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends apt-utils apt-transport-https ca-certificates gnupg wget curl jq python3 && \
-    REPO_CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME") && \
-    printf "Current repo version is ${REPO_CODENAME}" && \
-    install -m 0755 -d /etc/apt/keyrings /etc/apt/sources.list.d && \
-    curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor -o /etc/apt/keyrings/nginx.gpg && \
-    curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4f4ea0aae5267a6c" | gpg --dearmor -o /etc/apt/keyrings/ondrej.gpg && \
-    curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xde1997dcde742afa" | gpg --dearmor -o /etc/apt/keyrings/maxmind.gpg && \
-    chmod 0644 /etc/apt/keyrings/*.gpg  && \
-    echo "deb [signed-by=/etc/apt/keyrings/ondrej.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/ondrej-php.list && \
-    echo "deb [signed-by=/etc/apt/keyrings/ondrej.gpg] https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/ondrej-nginx.list && \
-    echo "deb-src [signed-by=/etc/apt/keyrings/ondrej.gpg] https://ppa.launchpadcontent.net/ondrej/nginx/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/ondrej-nginx.list && \
-    echo "deb [signed-by=/etc/apt/keyrings/maxmind.gpg] https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu ${REPO_CODENAME} main" > /etc/apt/sources.list.d/maxmind.list && \
-    apt-get update && \
-    apt-get install -y git nano \
+    apt-get install -y git nano curl jq \
                        nginx cron supervisor \
                        libmaxminddb0 mmdb-bin  \
                        libnginx-mod-http-brotli-filter \
