@@ -53,6 +53,7 @@ cd /etc/nginx/sites-available/
 # Counting
 CONFS=$(ls /etc/nginx/sites-available/ -1 | wc -l)
 # Enabling
+shopt -s nullglob
 for conf in *; do
     if  [ $conf != 'default' ]  || [ $CONFS == '1' ]; then
         echo " ---> Processing $conf file..."
