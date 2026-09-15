@@ -72,15 +72,20 @@ default:
         .
     - docker push $BUILD_IMAGE
     # Test
-    - docker run --name $BUILD_NAME $BUILD_IMAGE >/dev/null 2>&1 &
+    - docker run -d --name $BUILD_NAME $BUILD_IMAGE
     - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
     - docker exec $BUILD_NAME /bin/bash /health.sh
     - DOCKER_CODE=$?
     - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
   after_script:
-    # Cleaning
+    # Logs && Cleaning
     - BUILD_NAME=$(cat var_build_name)
     - BUILD_IMAGE=$(cat var_build_image)
+    - |
+      docker inspect --format \
+        'status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} error={{.State.Error}}' \
+        "$BUILD_NAME" || true
+      docker logs --timestamps --tail 200 "$BUILD_NAME" || true
     - docker stop $BUILD_NAME || true
     - docker rm $BUILD_NAME || true
     - docker rmi $BUILD_IMAGE || true
