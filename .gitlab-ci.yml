@@ -73,9 +73,6 @@ default:
     # Test
     - docker run -d --name $BUILD_NAME $BUILD_IMAGE
     - echo "Waiting for container to be up and running.."
-    - docker exec $BUILD_NAME /bin/bash /health.sh
-    - DOCKER_CODE=$?
-    - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
     - |
       ready=false
       deadline=$(( $(date +%s) + 60 ))
