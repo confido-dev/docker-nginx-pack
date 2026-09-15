@@ -137,7 +137,7 @@ RUN if [ "${PHP_VERSION}" != "false" ]; then \
         rm -rf /etc/php/current/cli/conf.d && ln -s /etc/php/current/fpm/conf.d /etc/php/current/cli/conf.d && \
         rm -f /etc/php/current/cli/php.ini && ln -s /etc/php/current/fpm/php.ini /etc/php/current/cli/php.ini && \
         ln -s /usr/sbin/php-fpm${PHP_VERSION} /usr/sbin/php-fpm && \
-        rm -rf /etc/php/latest/fpm/pool.d/* && \
+        rm -rf /etc/php/current/fpm/pool.d/* && \
         curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     ; fi
 
