@@ -6,7 +6,7 @@ services:
 variables:
   DOCKER_UNIQ: "${CI_PROJECT_NAME}-build-${CI_PIPELINE_ID}"
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
-  DOCKER_ARCHS: "linux/amd64 linux/arm64"
+  DOCKER_ARCHS: "linux/amd64"
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
 
@@ -137,17 +137,6 @@ build_core_amd64:
   tags:
     - linux-amd64
 
-build_core_arm64:
-  stage: build_core
-  extends:
-    - .tpl-build
-    - .tpl-matrix-core
-  needs:
-    - job: prepare_ssl
-  tags:
-    - linux-arm64
-
-
 build_php_amd64:
   stage: build_php
   extends:
@@ -158,18 +147,6 @@ build_php_amd64:
     - job: build_core_amd64
   tags:
     - linux-amd64
-
-
-build_php_arm64:
-  stage: build_php
-  extends:
-    - .tpl-build
-    - .tpl-matrix-php
-  needs:
-    - job: prepare_ssl
-    - job: build_core_arm64
-  tags:
-    - linux-arm64
 
 release_core:
   stage: release
