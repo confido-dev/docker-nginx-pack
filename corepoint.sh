@@ -23,11 +23,11 @@ if [ -z "$WWW_USER" ]; then
     echo " ---> User ${WWW_USER} created"
 else echo " ---> Using user ${WWW_USER}"; fi
 # Chowning app files recursive
-if [ -n "${FORCE_CHMOD_ALL:-}" ]; then
+if [[ "${FORCE_CHMOD_ALL:-}" == [Tt][Rr][Uu][Ee] ]]; then
     chown -R -- "$UID:$GID" "$WWW_HOME"
     chmod -R -- u=rwX,g=rX,o= "$WWW_HOME"
 # Chowning app files
-elif [ -n "${FORCE_CHMOD:-}" ]; then
+elif [[ "${FORCE_CHMOD:-}" == [Tt][Rr][Uu][Ee] ]]; then
     chown -- "$UID:$GID" "$WWW_HOME"
     chmod -- 0750 "$WWW_HOME"
 fi
