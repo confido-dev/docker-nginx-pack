@@ -150,6 +150,8 @@ if [ -f "/crontab.txt" ]; then
         echo "${VAR} DEFAULT=\"${VAL}\"" >> /etc/security/pam_env.conf
     done
     crontab -u $WWW_USER /crontab.txt
+else
+    crontab -u $WWW_USER -r
 fi
 
 
