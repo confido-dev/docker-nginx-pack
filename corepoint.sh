@@ -22,15 +22,14 @@ if [ -z "$WWW_USER" ]; then
     adduser --shell /bin/bash --home /home/$WWW_USER --uid $UID --gid $GID --disabled-password --gecos "" $WWW_USER
     echo " ---> User ${WWW_USER} created"
 else echo " ---> Using user ${WWW_USER}"; fi
-# Chowning app files
-if [ -n "${FORCE_CHMOD}" ]; then
-    chown $UID:$GID $WWW_HOME
-    chmod 0750 $WWW_HOME
-fi
 # Chowning app files recursive
-if [ -n "${FORCE_CHMOD_ALL}" ]; then
-    chown $UID:$GID $WWW_HOME -R
-    chmod 0750 $WWW_HOME -R
+if [ -n "${FORCE_CHMOD_ALL:-}" ]; then
+    chown -R -- "$UID:$GID" "$WWW_HOME"
+    chmod -R -- u=rwX,g=rX,o= "$WWW_HOME"
+# Chowning app files
+elif [ -n "${FORCE_CHMOD:-}" ]; then
+    chown -- "$UID:$GID" "$WWW_HOME"
+    chmod -- 0750 "$WWW_HOME"
 fi
 # Fixing NGINX
 sh -c "sed -i.old -e 's~^user.*$~user $WWW_USER $WWW_GROUP;~' /etc/nginx/nginx.conf"
@@ -53,6 +52,7 @@ cd /etc/nginx/sites-available/
 # Counting
 CONFS=$(ls /etc/nginx/sites-available/ -1 | wc -l)
 # Enabling
+shopt -s nullglob
 for conf in *; do
     if  [ $conf != 'default' ]  || [ $CONFS == '1' ]; then
         echo " ---> Processing $conf file..."
@@ -74,7 +74,7 @@ rm -f /etc/nginx/modules-enabled/50-mod-http-geoip2.conf
 # Resetting proxy_pass headers
 cat /etc/nginx/conf.d/sources/proxy-headers-basic.conf > /etc/nginx/conf.d/proxy-headers.conf
 # Cleaning XDebug
-rm -f /etc/php/current/fpm/conf.d/20-xdebug.ini
+rm -f /etc/php/current/fpm/conf.d/*-xdebug.ini
 # RealIP
 if [ -n "${NGINX_REALIP}" ]; then
     echo " ---> Enabling NGINX RealIP module"

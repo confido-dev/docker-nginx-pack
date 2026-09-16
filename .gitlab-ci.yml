@@ -6,7 +6,7 @@ services:
 variables:
   DOCKER_UNIQ: "${CI_PROJECT_NAME}-build-${CI_PIPELINE_ID}"
   DOCKER_NAME: "${DOCKER_ACC}/${DOCKER_PKG}"
-  DOCKER_ARCHS: "linux/amd64 linux/arm64"
+  DOCKER_ARCHS: "linux/amd64"
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
 
@@ -70,17 +70,29 @@ default:
         --progress=plain --provenance=false \
         --tag $BUILD_IMAGE --load \
         .
-    - docker push $BUILD_IMAGE
     # Test
-    - docker run --name $BUILD_NAME $BUILD_IMAGE >/dev/null 2>&1 &
-    - echo "Waiting for container to be up and running (timeout 10 seconds)..." && sleep 10
-    - docker exec $BUILD_NAME /bin/bash /health.sh
-    - DOCKER_CODE=$?
-    - if test $DOCKER_CODE -ne 0; then echo " - failed" && exit 1; fi
+    - docker run -d --name $BUILD_NAME $BUILD_IMAGE
+    - echo "Waiting for container to be up and running.."
+    - |
+      ready=false
+      deadline=$(( $(date +%s) + 60 ))
+      while [ "$(date +%s)" -lt "$deadline" ]; do
+        if [ "$(docker inspect --format '{{.State.Running}}' "$BUILD_NAME")" != "true" ]; then break; fi
+        if docker exec "$BUILD_NAME" /bin/bash /health.sh; then ready=true; break; fi
+        sleep 2
+      done
+      if [ "$ready" != "true" ]; then echo "Container did not become ready"; exit 1; fi
+    # Push
+    - docker push $BUILD_IMAGE
   after_script:
-    # Cleaning
+    # Logs && Cleaning
     - BUILD_NAME=$(cat var_build_name)
     - BUILD_IMAGE=$(cat var_build_image)
+    - |
+      docker inspect --format \
+        'status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} error={{.State.Error}}' \
+        "$BUILD_NAME" || true
+      docker logs --timestamps --tail 200 "$BUILD_NAME" || true
     - docker stop $BUILD_NAME || true
     - docker rm $BUILD_NAME || true
     - docker rmi $BUILD_IMAGE || true
@@ -119,7 +131,6 @@ prepare_ssl:
       -subj '/C=NO/ST=Null/L=Null/O=Null/OU=Null/CN=Null' \
       -keyout ./ssl/default.key \
       -out ./ssl/default.crt
-    - openssl dhparam -out ./ssl/dhparam.pem 4096
   artifacts:
     name: $DOCKER_UNIQ
     expire_in: 1 hour
@@ -138,17 +149,6 @@ build_core_amd64:
   tags:
     - linux-amd64
 
-build_core_arm64:
-  stage: build_core
-  extends:
-    - .tpl-build
-    - .tpl-matrix-core
-  needs:
-    - job: prepare_ssl
-  tags:
-    - linux-arm64
-
-
 build_php_amd64:
   stage: build_php
   extends:
@@ -159,18 +159,6 @@ build_php_amd64:
     - job: build_core_amd64
   tags:
     - linux-amd64
-
-
-build_php_arm64:
-  stage: build_php
-  extends:
-    - .tpl-build
-    - .tpl-matrix-php
-  needs:
-    - job: prepare_ssl
-    - job: build_core_arm64
-  tags:
-    - linux-arm64
 
 release_core:
   stage: release

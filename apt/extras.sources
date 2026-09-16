@@ -1,0 +1,11 @@
+Types: deb
+URIs: https://packages.sury.org/php/
+Suites: resolute
+Components: main
+Signed-By: /usr/share/keyrings/debsuryorg-archive-keyring.gpg
+
+Types: deb
+URIs: https://ppa.launchpadcontent.net/maxmind/ppa/ubuntu
+Suites: resolute
+Components: main
+Signed-By: /usr/share/keyrings/maxmind-ppa-keyring.gpg
