@@ -19,8 +19,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
     NGINX_REALIP="" \
     WWW_HOME="/var/www" \
-    GID=0 \
-    UID=0
+    APP_GID=0 \
+    APP_UID=0
 
 RUN apt-get update --error-on=any && \
     apt-get install -y --no-install-recommends ca-certificates && \
@@ -102,6 +102,10 @@ RUN if [ "${PHP_VERSION}" != "false" ]; then \
                            zip unzip && \
         if dpkg --compare-versions "$PHP_VERSION" lt "8.0"; then apt-get install -y php${PHP_VERSION}-json; fi && \
         if dpkg --compare-versions "$PHP_VERSION" lt "8.5"; then apt-get install -y php${PHP_VERSION}-opcache; fi && \
+        mongodb_policy="$(LC_ALL=C apt-cache policy "php${PHP_VERSION}-mongodb")" && \
+        mongodb_candidate="$(printf '%s\n' "$mongodb_policy" | awk '/^[[:space:]]*Candidate:/ {print $2}')" && \
+        if [ -n "$mongodb_candidate" ] && [ "$mongodb_candidate" != "(none)" ]; \
+        then apt-get install -y "php${PHP_VERSION}-mongodb"; fi && \
         apt-get clean && rm -rf /var/lib/apt/lists/* && rm /var/log/apt/history.log && rm /var/log/dpkg.log && \
         mv /etc/php/${PHP_VERSION} /etc/php/current && ln -s /etc/php/current /etc/php/${PHP_VERSION} && \
         rm -rf /etc/php/current/cli/conf.d && ln -s /etc/php/current/fpm/conf.d /etc/php/current/cli/conf.d && \

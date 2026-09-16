@@ -6,29 +6,29 @@ set -e
 ###        USER       ###
 #########################
 echo " :: INITING USER"
-# Creating GID
-echo " ---> Using GID #${GID}"
-WWW_GROUP=$(awk -v val=$GID -F ":" '$3==val{print $1}' /etc/group)
+# Creating group
+echo " ---> Using GID #${APP_GID}"
+WWW_GROUP=$(awk -v val=$APP_GID -F ":" '$3==val{print $1}' /etc/group)
 if [ -z "$WWW_GROUP" ]; then
-    WWW_GROUP="g${GID}"
-    addgroup --gid $GID $WWW_GROUP
+    WWW_GROUP="g${APP_GID}"
+    addgroup --gid $APP_GID $WWW_GROUP
     echo " ---> Group ${WWW_GROUP} created"
 else echo " ---> Using group ${WWW_GROUP}"; fi
-# Creating UID
-echo " ---> Using UID #${UID}"
-WWW_USER=$(awk -v val=$UID -F ":" '$3==val{print $1}' /etc/passwd)
+# Creating user
+echo " ---> Using UID #${APP_UID}"
+WWW_USER=$(awk -v val=$APP_UID -F ":" '$3==val{print $1}' /etc/passwd)
 if [ -z "$WWW_USER" ]; then
-    WWW_USER="u${UID}"
-    adduser --shell /bin/bash --home /home/$WWW_USER --uid $UID --gid $GID --disabled-password --gecos "" $WWW_USER
+    WWW_USER="u${APP_UID}"
+    adduser --shell /bin/bash --home /home/$WWW_USER --uid $APP_UID --gid $APP_GID --disabled-password --gecos "" $WWW_USER
     echo " ---> User ${WWW_USER} created"
 else echo " ---> Using user ${WWW_USER}"; fi
 # Chowning app files recursive
-if [ -n "${FORCE_CHMOD_ALL:-}" ]; then
-    chown -R -- "$UID:$GID" "$WWW_HOME"
+if [[ "${FORCE_CHMOD_ALL:-}" == [Tt][Rr][Uu][Ee] || "${FORCE_CHMOD_ALL:-}" == "1" ]]; then
+    chown -R -- "$APP_UID:$APP_GID" "$WWW_HOME"
     chmod -R -- u=rwX,g=rX,o= "$WWW_HOME"
 # Chowning app files
-elif [ -n "${FORCE_CHMOD:-}" ]; then
-    chown -- "$UID:$GID" "$WWW_HOME"
+elif [[ "${FORCE_CHMOD:-}" == [Tt][Rr][Uu][Ee] || "${FORCE_CHMOD:-}" == "1" ]]; then
+    chown -- "$APP_UID:$APP_GID" "$WWW_HOME"
     chmod -- 0750 "$WWW_HOME"
 fi
 # Fixing NGINX
@@ -140,16 +140,20 @@ fi
 
 
 #########################
+###     UNSETTING     ###
+#########################
+unset NGINX_REALIP APP_GID APP_UID FORCE_CHMOD FORCE_CHMOD_ALL
+
+
+#########################
 ###   CRONTAB START   ###
 #########################
 if [ -f "/crontab.txt" ]; then
     echo " :: LOADING CRONTAB"
-    env | while read -r LINE; do
-        IFS="=" read VAR VAL <<< ${LINE}
-        sed --in-place "/^${VAR}/d" /etc/security/pam_env.conf || true
-        echo "${VAR} DEFAULT=\"${VAL}\"" >> /etc/security/pam_env.conf
-    done
     crontab -u $WWW_USER /crontab.txt
+else
+    echo " :: CLEANING CRONTAB"
+    crontab -u $WWW_USER - </dev/null
 fi
 
 
@@ -160,8 +164,6 @@ echo " :: STARTING"
 cat /etc/supervisor/supervisord_core.conf > /etc/supervisor/supervisord.conf
 if [ -f "/crontab.txt"   ]; then cat /etc/supervisor/supervisord_cron.conf >> /etc/supervisor/supervisord.conf; fi
 if [ "${PHP_VERSION}" != "false" ]; then cat /etc/supervisor/supervisord_php.conf >> /etc/supervisor/supervisord.conf; fi
-unset NGINX_REALIP PHP_VERSION
-unset GID UID FORCE_CHMOD FORCE_CHMOD_ALL
 trap stop SIGTERM SIGINT SIGQUIT SIGHUP
 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf & SUPERVISOR_PID=$!
 wait "${SUPERVISOR_PID}"
