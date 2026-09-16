@@ -19,8 +19,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     COMPOSER_ALLOW_SUPERUSER=1 \
     NGINX_REALIP="" \
     WWW_HOME="/var/www" \
-    GID=0 \
-    UID=0
+    APP_GID=0 \
+    APP_UID=0
 
 RUN apt-get update --error-on=any && \
     apt-get install -y --no-install-recommends ca-certificates && \
