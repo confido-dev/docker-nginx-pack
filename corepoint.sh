@@ -157,7 +157,7 @@ if [ -f "/crontab.txt" ]; then
     done
     crontab -u $WWW_USER /crontab.txt
 else
-    crontab -u $WWW_USER -r
+    crontab -u $WWW_USER - </dev/null
 fi
 
 
