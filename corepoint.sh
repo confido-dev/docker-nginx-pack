@@ -150,13 +150,9 @@ unset NGINX_REALIP APP_GID APP_UID FORCE_CHMOD FORCE_CHMOD_ALL
 #########################
 if [ -f "/crontab.txt" ]; then
     echo " :: LOADING CRONTAB"
-    env | while read -r LINE; do
-        IFS="=" read VAR VAL <<< ${LINE}
-        sed --in-place "/^${VAR}/d" /etc/security/pam_env.conf || true
-        echo "${VAR} DEFAULT=\"${VAL}\"" >> /etc/security/pam_env.conf
-    done
     crontab -u $WWW_USER /crontab.txt
 else
+    echo " :: CLEANING CRONTAB"
     crontab -u $WWW_USER - </dev/null
 fi
 
